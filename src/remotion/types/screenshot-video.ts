@@ -43,7 +43,7 @@ export type PresetComputeFn = (ctx: PresetFrameContext) => PresetFrameOutput;
  * Index-Signatur eines Type-Alias benötigt.
  */
 export type ScreenshotVideoProps = {
-  readonly screenshotUrl: string;
+  readonly screenshotUrls: readonly string[];
   readonly presetName: CameraPresetName;
   readonly durationInFrames: number;
 };

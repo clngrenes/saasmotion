@@ -2,7 +2,15 @@
 
 import { Player } from "@remotion/player";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ScreenshotDropzone } from "../components/ScreenshotDropzone";
+import {
+  ScreenshotDropzone,
+  type ScreenshotItem,
+} from "../components/ScreenshotDropzone";
+import {
+  DEFAULT_VIDEO_DURATION_FRAMES,
+  DurationSelector,
+  type VideoDurationFrames,
+} from "../components/DurationSelector";
 import { getBrowserSupabase } from "../lib/supabase/client";
 import { ScreenshotVideo } from "../remotion/compositions/ScreenshotVideo";
 import {
@@ -11,8 +19,9 @@ import {
 } from "../remotion/types/screenshot-video";
 import type { RenderStatus } from "../types/render-job";
 
-const DEFAULT_PREVIEW_URL =
-  "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop";
+const DEFAULT_PREVIEW_URLS = [
+  "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
+];
 
 async function uploadScreenshot(file: File): Promise<string> {
   const formData = new FormData();
@@ -35,69 +44,105 @@ async function uploadScreenshot(file: File): Promise<string> {
 }
 
 export default function PreviewPage() {
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [items, setItems] = useState<ScreenshotItem[]>([]);
+  const [uploadedUrls, setUploadedUrls] = useState<(string | null)[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [presetName, setPresetName] =
     useState<CameraPresetName>("zelios-style");
-  const [durationInFrames, setDurationInFrames] = useState(150);
+  const [durationInFrames, setDurationInFrames] =
+    useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
 
   const [isRendering, setIsRendering] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<RenderStatus | null>(null);
   const [s3VideoUrl, setS3VideoUrl] = useState<string | null>(null);
 
-  const blobUrlRef = useRef<string | null>(null);
+  const blobUrlsRef = useRef<Set<string>>(new Set());
 
-  const revokeBlobUrl = useCallback(() => {
-    if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current);
-      blobUrlRef.current = null;
+  const revokeAllBlobUrls = useCallback(() => {
+    for (const url of blobUrlsRef.current) {
+      URL.revokeObjectURL(url);
     }
+    blobUrlsRef.current.clear();
   }, []);
 
   useEffect(() => {
-    return () => revokeBlobUrl();
-  }, [revokeBlobUrl]);
+    return () => revokeAllBlobUrls();
+  }, [revokeAllBlobUrls]);
 
-  const handleFileSelected = useCallback(
-    async (file: File) => {
-      revokeBlobUrl();
-      setScreenshotFile(file);
-      setUploadError(null);
-      setUploadedUrl(null);
+  const uploadItems = useCallback(async (nextItems: ScreenshotItem[]) => {
+    setIsUploading(true);
+    setUploadError(null);
 
-      const blobUrl = URL.createObjectURL(file);
-      blobUrlRef.current = blobUrl;
-      setPreviewUrl(blobUrl);
+    const urls: (string | null)[] = new Array(nextItems.length).fill(null);
 
-      setIsUploading(true);
-      try {
-        const url = await uploadScreenshot(file);
-        setUploadedUrl(url);
-      } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : "Upload fehlgeschlagen";
-        setUploadError(message);
-      } finally {
-        setIsUploading(false);
+    try {
+      for (let index = 0; index < nextItems.length; index += 1) {
+        urls[index] = await uploadScreenshot(nextItems[index].file);
       }
+      setUploadedUrls(urls);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Upload fehlgeschlagen";
+      setUploadError(message);
+      setUploadedUrls([]);
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  const handleFilesAdded = useCallback(
+    async (files: File[]) => {
+      setUploadError(null);
+
+      const newItems = files.map((file) => {
+        const previewUrl = URL.createObjectURL(file);
+        blobUrlsRef.current.add(previewUrl);
+        return { file, previewUrl };
+      });
+
+      const nextItems = [...items, ...newItems];
+      setItems(nextItems);
+      await uploadItems(nextItems);
     },
-    [revokeBlobUrl],
+    [items, uploadItems],
   );
 
-  const handleClearScreenshot = useCallback(() => {
-    revokeBlobUrl();
-    setScreenshotFile(null);
-    setPreviewUrl(null);
-    setUploadedUrl(null);
-    setUploadError(null);
-  }, [revokeBlobUrl]);
+  const handleRemove = useCallback(
+    async (index: number) => {
+      const removed = items[index];
+      if (removed) {
+        URL.revokeObjectURL(removed.previewUrl);
+        blobUrlsRef.current.delete(removed.previewUrl);
+      }
 
-  const playerScreenshotUrl = previewUrl ?? DEFAULT_PREVIEW_URL;
+      const nextItems = items.filter((_, itemIndex) => itemIndex !== index);
+      setItems(nextItems);
+
+      if (nextItems.length === 0) {
+        setUploadedUrls([]);
+        setUploadError(null);
+        return;
+      }
+
+      await uploadItems(nextItems);
+    },
+    [items, uploadItems],
+  );
+
+  const handleClear = useCallback(() => {
+    revokeAllBlobUrls();
+    setItems([]);
+    setUploadedUrls([]);
+    setUploadError(null);
+  }, [revokeAllBlobUrls]);
+
+  const previewUrls =
+    items.length > 0
+      ? items.map((item) => item.previewUrl)
+      : DEFAULT_PREVIEW_URLS;
 
   useEffect(() => {
     if (!jobId) return;
@@ -141,22 +186,27 @@ export default function PreviewPage() {
   }, [jobId]);
 
   const handleRender = async () => {
-    if (!screenshotFile) {
-      alert("Bitte zuerst einen Screenshot hochladen.");
+    if (items.length === 0) {
+      alert("Bitte zuerst mindestens einen Screenshot hochladen.");
       return;
     }
 
     if (isUploading) {
-      alert("Screenshot wird noch hochgeladen. Kurz warten…");
+      alert("Screenshots werden noch hochgeladen. Kurz warten…");
       return;
     }
 
-    let renderScreenshotUrl = uploadedUrl;
-    if (!renderScreenshotUrl) {
+    let renderScreenshotUrls = uploadedUrls.filter(
+      (url): url is string => Boolean(url),
+    );
+
+    if (renderScreenshotUrls.length !== items.length) {
       setIsUploading(true);
       try {
-        renderScreenshotUrl = await uploadScreenshot(screenshotFile);
-        setUploadedUrl(renderScreenshotUrl);
+        renderScreenshotUrls = await Promise.all(
+          items.map((item) => uploadScreenshot(item.file)),
+        );
+        setUploadedUrls(renderScreenshotUrls);
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : "Upload fehlgeschlagen";
@@ -179,7 +229,7 @@ export default function PreviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           props: {
-            screenshotUrl: renderScreenshotUrl,
+            screenshotUrls: renderScreenshotUrls,
             presetName,
             durationInFrames,
           },
@@ -208,18 +258,18 @@ export default function PreviewPage() {
         <div>
           <h1 className="text-xl font-bold text-white mb-1">SaaMotion</h1>
           <p className="text-sm text-neutral-400">
-            Cinematic 3D videos from a single screenshot.
+            Cinematic 3D videos from your app screenshots.
           </p>
         </div>
 
         <div className="flex flex-col gap-4 flex-grow">
           <ScreenshotDropzone
-            file={screenshotFile}
-            previewUrl={previewUrl}
+            items={items}
             isUploading={isUploading}
             uploadError={uploadError}
-            onFileSelected={handleFileSelected}
-            onClear={handleClearScreenshot}
+            onFilesAdded={handleFilesAdded}
+            onRemove={handleRemove}
+            onClear={handleClear}
           />
 
           <div className="flex flex-col gap-1.5">
@@ -245,38 +295,23 @@ export default function PreviewPage() {
             </select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="durationInFrames"
-              className="text-sm font-medium text-neutral-300"
-            >
-              Dauer (in Frames, 30 FPS)
-            </label>
-            <input
-              id="durationInFrames"
-              type="number"
-              min="30"
-              max="600"
-              value={durationInFrames}
-              onChange={(e) =>
-                setDurationInFrames(parseInt(e.target.value, 10))
-              }
-              className="w-full rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+          <DurationSelector
+            value={durationInFrames}
+            onChange={setDurationInFrames}
+          />
         </div>
 
         <div className="flex flex-col gap-3 mt-auto pt-6 border-t border-neutral-800">
           <button
             onClick={handleRender}
-            disabled={isRendering || isUploading || !screenshotFile}
+            disabled={isRendering || isUploading || items.length === 0}
             className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRendering
-              ? "Rendert..."
+              ? "Exportiert..."
               : isUploading
                 ? "Upload läuft..."
-                : "Rendern via SQS"}
+                : "Video exportieren"}
           </button>
 
           {jobId && (
@@ -311,7 +346,7 @@ export default function PreviewPage() {
           <Player
             component={ScreenshotVideo}
             inputProps={{
-              screenshotUrl: playerScreenshotUrl,
+              screenshotUrls: previewUrls,
               presetName,
               durationInFrames,
             }}

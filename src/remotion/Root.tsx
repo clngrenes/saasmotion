@@ -9,12 +9,13 @@ const WIDTH = 1080;
 const HEIGHT = 1920;
 const DEFAULT_DURATION_IN_FRAMES = 150;
 
-const defaultProps: ScreenshotVideoProps = {
-  screenshotUrl:
+const defaultProps = {
+  screenshotUrls: [
     "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
-  presetName: "zelios-style",
+  ],
+  presetName: "zelios-style" as const,
   durationInFrames: DEFAULT_DURATION_IN_FRAMES,
-};
+} satisfies ScreenshotVideoProps;
 
 export const RemotionRoot: React.FC = () => {
   return (

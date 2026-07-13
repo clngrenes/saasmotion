@@ -2,9 +2,9 @@ import type { ScreenshotVideoProps } from "../remotion/types/screenshot-video";
 
 /**
  * Mögliche Statuswerte für einen Render-Job im System.
- * - queued: In die SQS-Queue eingereiht, wartet auf Worker.
- * - rendering: SQS-Worker hat den Job an Remotion Lambda übergeben.
- * - done: Remotion Lambda hat das Video erfolgreich auf S3 abgelegt.
+ * - queued: Inngest-Event wurde eingereiht, wartet auf Worker.
+ * - rendering: Vercel Sandbox rendert das Video.
+ * - done: Video liegt in Supabase Storage.
  * - failed: Fehler aufgetreten (Details in errorDetails).
  */
 export type RenderStatus = "queued" | "rendering" | "done" | "failed";
@@ -25,7 +25,6 @@ export interface RenderJob {
 
 /**
  * Request-Body für POST /api/render/enqueue
- * Wird vom Frontend gesendet, wenn der User "Video rendern" klickt.
  */
 export interface EnqueueRenderRequest {
   readonly props: ScreenshotVideoProps;
@@ -40,23 +39,9 @@ export interface EnqueueRenderResponse {
 }
 
 /**
- * Struktur der SQS-Message, die unsere API an die Queue sendet.
- * Die AWS Lambda (Worker) empfängt genau dieses Format.
+ * Inngest-Event, das die Render-Pipeline startet.
  */
-export interface SqsRenderMessage {
+export interface RenderRequestedEventData {
   readonly jobId: string;
   readonly props: ScreenshotVideoProps;
-}
-
-/**
- * Webhook-Payload von Remotion Lambda.
- * (Stark vereinfacht; Remotion Lambda sendet mehr Details,
- * aber das sind die für uns relevanten Felder).
- */
-export interface RemotionWebhookPayload {
-  readonly type: "success" | "timeout" | "error";
-  readonly renderId: string;
-  readonly expectedBucketName: string;
-  readonly expectedKey: string;
-  readonly errors: { message: string }[];
 }
