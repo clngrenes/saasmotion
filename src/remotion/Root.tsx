@@ -1,0 +1,35 @@
+import React from "react";
+import { Composition } from "remotion";
+import { ScreenshotVideo } from "./compositions/ScreenshotVideo";
+import { screenshotVideoSchema } from "./schemas/screenshot-video-schema";
+import type { ScreenshotVideoProps } from "./types/screenshot-video";
+
+const FPS = 30;
+const WIDTH = 1080;
+const HEIGHT = 1920;
+const DEFAULT_DURATION_IN_FRAMES = 150;
+
+const defaultProps: ScreenshotVideoProps = {
+  screenshotUrl:
+    "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
+  presetName: "zelios-style",
+  durationInFrames: DEFAULT_DURATION_IN_FRAMES,
+};
+
+export const RemotionRoot: React.FC = () => {
+  return (
+    <Composition
+      id="ScreenshotVideo"
+      component={ScreenshotVideo}
+      schema={screenshotVideoSchema}
+      defaultProps={defaultProps}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      durationInFrames={DEFAULT_DURATION_IN_FRAMES}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: props.durationInFrames,
+      })}
+    />
+  );
+};
