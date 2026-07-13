@@ -1,7 +1,9 @@
 "use client";
 
 import { Player } from "@remotion/player";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ProductBriefPanel } from "../components/ProductBriefPanel";
+import { SceneScriptEditor } from "../components/SceneScriptEditor";
 import {
   ScreenshotDropzone,
   type ScreenshotItem,
@@ -12,12 +14,18 @@ import {
   type VideoDurationFrames,
 } from "../components/DurationSelector";
 import { getBrowserSupabase } from "../lib/supabase/client";
+import {
+  buildDefaultSceneCopy,
+  buildVideoProps,
+  mergeScenesWithCopy,
+} from "../lib/video/build-video-props";
 import { ScreenshotVideo } from "../remotion/compositions/ScreenshotVideo";
 import {
   CAMERA_PRESET_NAMES,
   type CameraPresetName,
 } from "../remotion/types/screenshot-video";
 import type { RenderStatus } from "../types/render-job";
+import type { GeneratedSceneCopy } from "../types/video-script";
 
 const DEFAULT_PREVIEW_URLS = [
   "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
@@ -49,6 +57,17 @@ export default function PreviewPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const [productDescription, setProductDescription] = useState("");
+  const [productContext, setProductContext] = useState("");
+  const [productName, setProductName] = useState("SaaMotion");
+  const [tagline, setTagline] = useState(
+    "Cinematic 3D videos from your app screenshots",
+  );
+  const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [enableAudio, setEnableAudio] = useState(true);
+
   const [presetName, setPresetName] =
     useState<CameraPresetName>("zelios-style");
   const [durationInFrames, setDurationInFrames] =
@@ -71,6 +90,11 @@ export default function PreviewPage() {
   useEffect(() => {
     return () => revokeAllBlobUrls();
   }, [revokeAllBlobUrls]);
+
+  const screenshotNames = useMemo(
+    () => items.map((item) => item.file.name),
+    [items],
+  );
 
   const uploadItems = useCallback(async (nextItems: ScreenshotItem[]) => {
     setIsUploading(true);
@@ -105,6 +129,13 @@ export default function PreviewPage() {
 
       const nextItems = [...items, ...newItems];
       setItems(nextItems);
+      setSceneCopy((prev) => {
+        const next = [...prev];
+        for (let i = prev.length; i < nextItems.length; i += 1) {
+          next.push(buildDefaultSceneCopy(i, nextItems.length));
+        }
+        return next;
+      });
       await uploadItems(nextItems);
     },
     [items, uploadItems],
@@ -120,6 +151,7 @@ export default function PreviewPage() {
 
       const nextItems = items.filter((_, itemIndex) => itemIndex !== index);
       setItems(nextItems);
+      setSceneCopy((prev) => prev.filter((_, i) => i !== index));
 
       if (nextItems.length === 0) {
         setUploadedUrls([]);
@@ -137,12 +169,101 @@ export default function PreviewPage() {
     setItems([]);
     setUploadedUrls([]);
     setUploadError(null);
+    setSceneCopy([]);
   }, [revokeAllBlobUrls]);
 
   const previewUrls =
     items.length > 0
       ? items.map((item) => item.previewUrl)
       : DEFAULT_PREVIEW_URLS;
+
+  const effectiveSceneCopy = useMemo(() => {
+    if (sceneCopy.length === previewUrls.length && sceneCopy.length > 0) {
+      return sceneCopy;
+    }
+    return previewUrls.map((_, index) =>
+      buildDefaultSceneCopy(index, previewUrls.length),
+    );
+  }, [previewUrls, sceneCopy]);
+
+  const playerInputProps = useMemo(
+    () =>
+      buildVideoProps({
+        scenes: mergeScenesWithCopy(previewUrls, effectiveSceneCopy),
+        productName: productName || "Your Product",
+        tagline,
+        presetName,
+        durationInFrames,
+        enableAudio,
+      }),
+    [
+      previewUrls,
+      effectiveSceneCopy,
+      productName,
+      tagline,
+      presetName,
+      durationInFrames,
+      enableAudio,
+    ],
+  );
+
+  const handleGenerateScript = async () => {
+    if (items.length === 0) {
+      alert("Bitte zuerst Screenshots hochladen.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const res = await fetch("/api/generate/script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productDescription,
+          productContext: productContext || undefined,
+          screenshotNames,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(body?.error ?? "KI-Script fehlgeschlagen");
+      }
+
+      const data = (await res.json()) as {
+        productName: string;
+        tagline: string;
+        scenes: GeneratedSceneCopy[];
+      };
+
+      setProductName(data.productName);
+      setTagline(data.tagline);
+      setSceneCopy(data.scenes);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "KI-Script fehlgeschlagen";
+      setGenerateError(message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSceneCopyChange = (
+    index: number,
+    field: "headline" | "subline",
+    value: string,
+  ) => {
+    setSceneCopy((prev) => {
+      const next = [...prev];
+      const current = next[index] ?? buildDefaultSceneCopy(index, prev.length);
+      next[index] = { ...current, [field]: value };
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!jobId) return;
@@ -218,6 +339,15 @@ export default function PreviewPage() {
       }
     }
 
+    const exportProps = buildVideoProps({
+      scenes: mergeScenesWithCopy(renderScreenshotUrls, effectiveSceneCopy),
+      productName: productName || "Your Product",
+      tagline,
+      presetName,
+      durationInFrames,
+      enableAudio,
+    });
+
     setIsRendering(true);
     setJobId(null);
     setJobStatus("queued");
@@ -227,13 +357,7 @@ export default function PreviewPage() {
       const res = await fetch("/api/render/enqueue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          props: {
-            screenshotUrls: renderScreenshotUrls,
-            presetName,
-            durationInFrames,
-          },
-        }),
+        body: JSON.stringify({ props: exportProps }),
       });
 
       if (!res.ok) {
@@ -260,11 +384,11 @@ export default function PreviewPage() {
 
   return (
     <div className="flex h-screen w-full bg-neutral-950 text-neutral-100 font-sans">
-      <aside className="w-96 flex-shrink-0 border-r border-neutral-800 bg-neutral-900 p-6 flex flex-col gap-6 overflow-y-auto">
+      <aside className="w-[420px] flex-shrink-0 border-r border-neutral-800 bg-neutral-900 p-6 flex flex-col gap-5 overflow-y-auto">
         <div>
           <h1 className="text-xl font-bold text-white mb-1">SaaMotion</h1>
           <p className="text-sm text-neutral-400">
-            Cinematic 3D videos from your app screenshots.
+            AI-powered cinematic product videos from screenshots.
           </p>
         </div>
 
@@ -276,6 +400,28 @@ export default function PreviewPage() {
             onFilesAdded={handleFilesAdded}
             onRemove={handleRemove}
             onClear={handleClear}
+          />
+
+          <ProductBriefPanel
+            screenshotCount={items.length}
+            screenshotNames={screenshotNames}
+            productDescription={productDescription}
+            productContext={productContext}
+            productName={productName}
+            tagline={tagline}
+            isGenerating={isGenerating}
+            generateError={generateError}
+            onDescriptionChange={setProductDescription}
+            onContextChange={setProductContext}
+            onProductNameChange={setProductName}
+            onTaglineChange={setTagline}
+            onGenerate={handleGenerateScript}
+          />
+
+          <SceneScriptEditor
+            sceneCopy={effectiveSceneCopy}
+            screenshotNames={screenshotNames}
+            onChange={handleSceneCopyChange}
           />
 
           <div className="flex flex-col gap-1.5">
@@ -305,6 +451,16 @@ export default function PreviewPage() {
             value={durationInFrames}
             onChange={setDurationInFrames}
           />
+
+          <label className="flex items-center gap-2 text-sm text-neutral-300">
+            <input
+              type="checkbox"
+              checked={enableAudio}
+              onChange={(e) => setEnableAudio(e.target.checked)}
+              className="rounded border-neutral-600 bg-neutral-950"
+            />
+            Musik & Sound-Effekte
+          </label>
         </div>
 
         <div className="flex flex-col gap-3 mt-auto pt-6 border-t border-neutral-800">
@@ -351,11 +507,7 @@ export default function PreviewPage() {
         <div className="rounded-xl overflow-hidden ring-1 ring-white/10 shadow-2xl bg-black">
           <Player
             component={ScreenshotVideo}
-            inputProps={{
-              screenshotUrls: previewUrls,
-              presetName,
-              durationInFrames,
-            }}
+            inputProps={playerInputProps}
             durationInFrames={durationInFrames}
             compositionWidth={1080}
             compositionHeight={1920}

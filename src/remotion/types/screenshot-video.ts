@@ -35,6 +35,12 @@ export interface PresetFrameOutput {
 /** Signatur aller Preset-Funktionen — pure, testbar, kein React */
 export type PresetComputeFn = (ctx: PresetFrameContext) => PresetFrameOutput;
 
+export type VideoScene = {
+  readonly screenshotUrl: string;
+  readonly headline: string;
+  readonly subline: string;
+};
+
 /**
  * Remotion Composition Props (öffentliche API).
  *
@@ -43,9 +49,14 @@ export type PresetComputeFn = (ctx: PresetFrameContext) => PresetFrameOutput;
  * Index-Signatur eines Type-Alias benötigt.
  */
 export type ScreenshotVideoProps = {
-  readonly screenshotUrls: readonly string[];
+  readonly scenes: readonly VideoScene[];
+  readonly productName: string;
+  readonly tagline: string;
   readonly presetName: CameraPresetName;
   readonly durationInFrames: number;
+  readonly backgroundMusicUrl: string;
+  readonly transitionSfxUrl: string;
+  readonly enableAudio: boolean;
 };
 
 /** Device-Frame Geometrie-Konstanten (Option B Default) */
