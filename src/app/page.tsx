@@ -237,7 +237,13 @@ export default function PreviewPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Fehler beim Starten des Render-Jobs");
+        const body = (await res.json().catch(() => null)) as {
+          message?: string;
+          error?: string;
+        } | null;
+        throw new Error(
+          body?.message ?? body?.error ?? "Fehler beim Starten des Render-Jobs",
+        );
       }
 
       const data = await res.json();
