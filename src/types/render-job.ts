@@ -2,8 +2,8 @@ import type { ScreenshotVideoProps } from "../remotion/types/screenshot-video";
 
 /**
  * Mögliche Statuswerte für einen Render-Job im System.
- * - queued: Inngest-Event wurde eingereiht, wartet auf Worker.
- * - rendering: Vercel Sandbox rendert das Video.
+ * - queued: Job wartet in der Worker-Queue.
+ * - rendering: Worker rendert das Video.
  * - done: Video liegt in Supabase Storage.
  * - failed: Fehler aufgetreten (Details in errorDetails).
  */

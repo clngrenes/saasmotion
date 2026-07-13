@@ -8,7 +8,7 @@
     "start": "next start",
     "remotion:studio": "remotion studio src/remotion/index.ts",
     "remotion:render": "remotion render src/remotion/index.ts",
-    "create-snapshot": "npx tsx scripts/create-snapshot.ts",
+    "render-worker": "npx tsx render-worker/server.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -17,12 +17,9 @@
     "@react-three/fiber": "^9.6.1",
     "@remotion/cli": "^4.0.489",
     "@remotion/player": "^4.0.489",
+    "@remotion/renderer": "^4.0.489",
     "@remotion/three": "^4.0.489",
-    "@remotion/vercel": "^4.0.489",
     "@supabase/supabase-js": "^2.110.2",
-    "@vercel/blob": "^2.6.1",
-    "@vercel/functions": "^3.7.5",
-    "@vercel/sandbox": "^2.6.0",
     "ai": "^7.0.22",
     "inngest": "^4.12.1",
     "next": "^15.5.0",
@@ -39,6 +36,7 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.185.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^3.2.7"
   }
