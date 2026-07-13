@@ -1,7 +1,7 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
 import type { GeneratedVideoScript } from "../../types/video-script";
+import { scriptModel } from "./google";
 
 const scriptSchema = z.object({
   productName: z.string().min(1).max(60),
@@ -26,40 +26,38 @@ export async function generateVideoScript(input: {
   productContext?: string;
   screenshotNames: readonly string[];
 }): Promise<GeneratedVideoScript> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GEMINI_API_KEY) {
     throw new Error(
-      "OPENAI_API_KEY fehlt. Trage den Key in .env.local bzw. Vercel Environment Variables ein.",
+      "GEMINI_API_KEY fehlt. Trage den Key in .env.local bzw. Vercel Environment Variables ein.",
     );
   }
 
-  const openai = createOpenAI({ apiKey });
   const sceneCount = Math.max(1, input.screenshotNames.length);
   const context = trimContext(input.productContext);
 
   const { object } = await generateObject({
-    model: openai("gpt-4o-mini"),
+    model: scriptModel,
     schema: scriptSchema,
-    prompt: `Du bist ein Creative Director für SaaS-Produktvideos im Stil von Apple/xAI/Grok.
+    prompt: `You are a creative director for premium SaaS launch videos (Apple, Linear, Grok).
 
-Erstelle ein kurzes, punchy Promo-Script auf Englisch (auch wenn die Beschreibung Deutsch ist).
+Write a short, punchy promo script in English.
 
-Regeln:
-- Genau ${sceneCount} Szenen — eine pro Screenshot, in Upload-Reihenfolge
-- Headlines: kurz, benefit-driven, keine Floskeln
-- Sublines: 1 kurzer Satz, konkret
-- Szene 1 = starker Hook / Intro-Moment
-- Letzte Szene = CTA oder Key Benefit
-- Nutze Produktkontext nur für Fakten, erfinde keine Features
-- Wiederhole keine Secrets aus .env-Dateien
+Rules:
+- Exactly ${sceneCount} scenes — one per screenshot, in upload order
+- Headlines: short, benefit-driven, no fluff
+- Sublines: one concrete sentence each
+- Scene 1 = strong hook
+- Final scene = CTA or key benefit
+- Use product context for facts only — do not invent features
+- Never repeat secrets from env files
 
-Produktbeschreibung:
+Product description:
 ${input.productDescription}
 
-Screenshot-Dateien (Reihenfolge):
+Screenshots (order):
 ${input.screenshotNames.map((name, i) => `${i + 1}. ${name}`).join("\n")}
 
-${context ? `Produktkontext (env/README/package — kann Secrets enthalten, nicht zitieren):\n${context}` : ""}`,
+${context ? `Product context (env/README/package — may contain secrets, do not quote):\n${context}` : ""}`,
   });
 
   if (object.scenes.length !== sceneCount) {
