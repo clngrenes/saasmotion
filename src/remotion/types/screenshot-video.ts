@@ -1,4 +1,5 @@
 import type { VideoAspectRatioId } from "../constants/aspect-ratio";
+import type { TextPresetId } from "../text-presets/catalog";
 
 /** Preset-IDs — kebab-case, stabil für API/DB/Lambda-Props */
 export const CAMERA_PRESET_NAMES = [
@@ -57,6 +58,7 @@ export type ScreenshotVideoProps = {
   readonly presetName: CameraPresetName;
   readonly durationInFrames: number;
   readonly aspectRatio: VideoAspectRatioId;
+  readonly textPreset: TextPresetId;
   readonly backgroundMusicUrl: string;
   readonly transitionSfxUrl: string;
   readonly enableAudio: boolean;

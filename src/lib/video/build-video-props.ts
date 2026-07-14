@@ -3,6 +3,10 @@ import {
   type VideoAspectRatioId,
 } from "../../remotion/constants/aspect-ratio";
 import {
+  DEFAULT_TEXT_PRESET,
+  type TextPresetId,
+} from "../../remotion/text-presets/catalog";
+import {
   DEFAULT_BACKGROUND_MUSIC_URL,
   DEFAULT_TRANSITION_SFX_URL,
 } from "../../remotion/constants/media";
@@ -48,6 +52,7 @@ export function buildVideoProps(input: {
   presetName: CameraPresetName;
   durationInFrames: number;
   aspectRatio?: VideoAspectRatioId;
+  textPreset?: TextPresetId;
   enableAudio?: boolean;
   backgroundMusicUrl?: string;
   transitionSfxUrl?: string;
@@ -60,6 +65,7 @@ export function buildVideoProps(input: {
     presetName: input.presetName,
     durationInFrames: input.durationInFrames,
     aspectRatio: input.aspectRatio ?? DEFAULT_VIDEO_ASPECT_RATIO,
+    textPreset: input.textPreset ?? DEFAULT_TEXT_PRESET,
     enableAudio: input.enableAudio ?? true,
     backgroundMusicUrl: input.backgroundMusicUrl ?? DEFAULT_BACKGROUND_MUSIC_URL,
     transitionSfxUrl: input.transitionSfxUrl ?? DEFAULT_TRANSITION_SFX_URL,

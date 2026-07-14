@@ -6,8 +6,13 @@ import { AssetDropzone } from "../components/studio/AssetDropzone";
 import { BriefForm } from "../components/studio/BriefForm";
 import { ExportProgressPanel, type ExportPhase } from "../components/studio/ExportProgressPanel";
 import { LogoDropzone } from "../components/studio/LogoDropzone";
+import { TextPresetPicker } from "../components/studio/TextPresetPicker";
 import { StyleControls } from "../components/studio/StyleControls";
 import { StudioSection } from "../components/studio/StudioSection";
+import {
+  DEFAULT_TEXT_PRESET,
+  type TextPresetId,
+} from "../remotion/text-presets/catalog";
 import {
   DEFAULT_VIDEO_DURATION_FRAMES,
   type VideoDurationFrames,
@@ -86,6 +91,8 @@ export default function PreviewPage() {
   const [presetName, setPresetName] = useState<CameraPresetName>("zelios-style");
   const [aspectRatio, setAspectRatio] =
     useState<VideoAspectRatioId>(DEFAULT_VIDEO_ASPECT_RATIO);
+  const [textPreset, setTextPreset] =
+    useState<TextPresetId>(DEFAULT_TEXT_PRESET);
   const [durationInFrames, setDurationInFrames] =
     useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
 
@@ -182,10 +189,11 @@ export default function PreviewPage() {
         presetName,
         durationInFrames,
         aspectRatio,
+        textPreset,
         enableAudio,
         logoUrl: logoUrl ?? undefined,
       }),
-    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, enableAudio, logoUrl],
+    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, enableAudio, logoUrl],
   );
 
   const generateScript = useCallback(async () => {
@@ -359,6 +367,7 @@ export default function PreviewPage() {
             presetName,
             durationInFrames,
             aspectRatio,
+            textPreset,
             enableAudio,
             logoUrl: logoUrl ?? undefined,
           }),
@@ -420,6 +429,10 @@ export default function PreviewPage() {
               onDescriptionChange={setProductDescription}
               onContextLoad={setProductContext}
             />
+          </StudioSection>
+
+          <StudioSection title="Text">
+            <TextPresetPicker value={textPreset} onChange={setTextPreset} />
           </StudioSection>
 
           <StudioSection title="Style">

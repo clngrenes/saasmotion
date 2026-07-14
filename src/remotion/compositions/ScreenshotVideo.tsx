@@ -29,6 +29,7 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   transitionSfxUrl,
   enableAudio,
   logoUrl,
+  textPreset,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -105,6 +106,7 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
             subline={activeScene.subline}
             localFrame={localFrame}
             localDuration={localDuration}
+            textPreset={textPreset}
           />
         </>
       )}

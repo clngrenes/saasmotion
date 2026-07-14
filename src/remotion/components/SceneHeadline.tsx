@@ -1,11 +1,18 @@
 import React from "react";
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { useVideoConfig } from "remotion";
+import type { TextPresetId } from "../text-presets/catalog";
+import {
+  computeSublineEnter,
+  computeTextEnter,
+  computeTextExit,
+} from "../text-presets/compute";
 
 interface SceneHeadlineProps {
   readonly headline: string;
   readonly subline: string;
   readonly localFrame: number;
   readonly localDuration: number;
+  readonly textPreset: TextPresetId;
 }
 
 export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
@@ -13,30 +20,14 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
   subline,
   localFrame,
   localDuration,
+  textPreset,
 }) => {
   const { width, height } = useVideoConfig();
   const isLandscape = width > height;
 
-  const headlineOpacity = interpolate(localFrame, [0, 18], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const headlineY = interpolate(localFrame, [0, 18], [16, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const sublineOpacity = interpolate(localFrame, [14, 30], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const containerOpacity = interpolate(
-    localFrame,
-    [localDuration - 20, localDuration - 6],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const enter = computeTextEnter(textPreset, localFrame, { width, height });
+  const exit = computeTextExit(localFrame, localDuration);
+  const sublineOpacity = computeSublineEnter(localFrame);
 
   if (!headline && !subline) {
     return null;
@@ -45,6 +36,13 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
   const headlineSize = Math.round(width * 0.048);
   const sublineSize = Math.round(width * 0.026);
   const paddingX = Math.round(width * 0.05);
+
+  const headlineOpacity = enter.opacity * exit.opacity;
+  const headlineTransform = [
+    `translateX(${enter.translateX}px)`,
+    `translateY(${enter.translateY + exit.translateY}px)`,
+    `scale(${enter.scale})`,
+  ].join(" ");
 
   return (
     <div
@@ -55,7 +53,6 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
           : { top: Math.round(height * 0.06), left: 0, right: 0 }),
         padding: `0 ${paddingX}px`,
         textAlign: "center",
-        opacity: containerOpacity,
         pointerEvents: "none",
         zIndex: 20,
       }}
@@ -70,7 +67,9 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
             letterSpacing: "-0.03em",
             lineHeight: 1.1,
             opacity: headlineOpacity,
-            transform: `translateY(${headlineY}px)`,
+            transform: headlineTransform,
+            filter: enter.filter,
+            clipPath: enter.clipPath,
             fontFamily:
               'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
           }}
@@ -86,7 +85,8 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
             fontSize: sublineSize,
             fontWeight: 400,
             lineHeight: 1.35,
-            opacity: sublineOpacity,
+            opacity: sublineOpacity * exit.opacity,
+            transform: `translateY(${exit.translateY}px)`,
             fontFamily:
               'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
           }}

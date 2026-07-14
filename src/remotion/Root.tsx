@@ -6,6 +6,9 @@ import {
   getVideoDimensions,
 } from "./constants/aspect-ratio";
 import {
+  DEFAULT_TEXT_PRESET,
+} from "./text-presets/catalog";
+import {
   DEFAULT_BACKGROUND_MUSIC_URL,
   DEFAULT_TRANSITION_SFX_URL,
 } from "./constants/media";
@@ -29,6 +32,7 @@ const defaultProps = {
   presetName: "zelios-style" as const,
   durationInFrames: DEFAULT_DURATION_IN_FRAMES,
   aspectRatio: DEFAULT_VIDEO_ASPECT_RATIO,
+  textPreset: DEFAULT_TEXT_PRESET,
   backgroundMusicUrl: DEFAULT_BACKGROUND_MUSIC_URL,
   transitionSfxUrl: DEFAULT_TRANSITION_SFX_URL,
   enableAudio: true,
