@@ -13,8 +13,8 @@ export const screenshotVideoSchema = z.object({
   tagline: z.string().max(160),
   presetName: z.enum(CAMERA_PRESET_NAMES),
   durationInFrames: z.number().int().positive(),
-  backgroundMusicUrl: z.string().url(),
-  transitionSfxUrl: z.string().url(),
+  backgroundMusicUrl: z.string().min(1),
+  transitionSfxUrl: z.string().min(1),
   enableAudio: z.boolean(),
   logoUrl: z.string().url().optional(),
 });

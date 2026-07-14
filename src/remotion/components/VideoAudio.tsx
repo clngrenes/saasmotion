@@ -1,8 +1,8 @@
 import React from "react";
-import { Audio, Sequence } from "remotion";
+import { Audio, Sequence, staticFile } from "remotion";
 import {
-  DEFAULT_BACKGROUND_MUSIC_URL,
-  DEFAULT_TRANSITION_SFX_URL,
+  BACKGROUND_MUSIC_FILE,
+  TRANSITION_SFX_FILE,
 } from "../constants/media";
 import { getSlideStartFrames } from "../lib/slide-timing";
 
@@ -15,12 +15,19 @@ interface VideoAudioProps {
   readonly enableAudio: boolean;
 }
 
+function resolveAudioSrc(src: string): string {
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return src;
+  }
+  return staticFile(src.replace(/^\//, ""));
+}
+
 export const VideoAudio: React.FC<VideoAudioProps> = ({
   durationInFrames,
   slideCount,
   introDurationFrames,
-  backgroundMusicUrl = DEFAULT_BACKGROUND_MUSIC_URL,
-  transitionSfxUrl = DEFAULT_TRANSITION_SFX_URL,
+  backgroundMusicUrl = BACKGROUND_MUSIC_FILE,
+  transitionSfxUrl = TRANSITION_SFX_FILE,
   enableAudio,
 }) => {
   if (!enableAudio) {
@@ -32,12 +39,15 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
     (start) => start + introDurationFrames,
   );
 
+  const musicSrc = resolveAudioSrc(backgroundMusicUrl);
+  const sfxSrc = resolveAudioSrc(transitionSfxUrl);
+
   return (
     <>
-      <Audio src={backgroundMusicUrl} volume={0.22} loop />
-      {slideStarts.slice(1).map((startFrame, index) => (
+      <Audio src={musicSrc} volume={0.22} loop />
+      {slideStarts.slice(1).map((startFrame) => (
         <Sequence key={startFrame} from={startFrame} durationInFrames={24}>
-          <Audio src={transitionSfxUrl} volume={0.35} />
+          <Audio src={sfxSrc} volume={0.35} />
         </Sequence>
       ))}
     </>
