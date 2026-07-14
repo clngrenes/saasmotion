@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { INTRO_DURATION_FRAMES } from "../constants/media";
 
 interface ProductIntroProps {
@@ -14,6 +14,7 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
   logoUrl,
 }) => {
   const frame = useCurrentFrame();
+  const { width } = useVideoConfig();
 
   const opacity = interpolate(
     frame,
@@ -31,6 +32,10 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
     return null;
   }
 
+  const titleSize = Math.round(width * 0.067);
+  const taglineSize = Math.round(width * 0.028);
+  const labelSize = Math.round(width * 0.024);
+
   return (
     <AbsoluteFill
       style={{
@@ -46,8 +51,8 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
           <Img
             src={logoUrl}
             style={{
-              width: 96,
-              height: 96,
+              width: Math.round(width * 0.09),
+              height: Math.round(width * 0.09),
               objectFit: "contain",
               margin: "0 auto 28px",
               display: "block",
@@ -58,7 +63,7 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
           style={{
             margin: 0,
             color: "rgba(148, 163, 184, 0.9)",
-            fontSize: 26,
+            fontSize: labelSize,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             fontWeight: 600,
@@ -70,7 +75,7 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
           style={{
             margin: "12px 0 0",
             color: "#ffffff",
-            fontSize: 72,
+            fontSize: titleSize,
             fontWeight: 800,
             letterSpacing: "-0.04em",
             lineHeight: 1.05,
@@ -85,9 +90,9 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
             style={{
               margin: "20px 0 0",
               color: "rgba(226, 232, 240, 0.75)",
-              fontSize: 30,
+              fontSize: taglineSize,
               fontWeight: 400,
-              maxWidth: 720,
+              maxWidth: width * 0.75,
               lineHeight: 1.35,
             }}
           >

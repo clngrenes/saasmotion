@@ -12,6 +12,11 @@ import {
   DEFAULT_VIDEO_DURATION_FRAMES,
   type VideoDurationFrames,
 } from "../components/DurationSelector";
+import {
+  DEFAULT_VIDEO_ASPECT_RATIO,
+  getVideoDimensions,
+  type VideoAspectRatioId,
+} from "../remotion/constants/aspect-ratio";
 import { getBrowserSupabase } from "../lib/supabase/client";
 import {
   buildDefaultSceneCopy,
@@ -79,6 +84,8 @@ export default function PreviewPage() {
   const [logoError, setLogoError] = useState<string | null>(null);
 
   const [presetName, setPresetName] = useState<CameraPresetName>("zelios-style");
+  const [aspectRatio, setAspectRatio] =
+    useState<VideoAspectRatioId>(DEFAULT_VIDEO_ASPECT_RATIO);
   const [durationInFrames, setDurationInFrames] =
     useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
 
@@ -161,6 +168,11 @@ export default function PreviewPage() {
     return previewUrls.map((_, i) => buildDefaultSceneCopy(i, previewUrls.length));
   }, [previewUrls, sceneCopy]);
 
+  const canvasDimensions = useMemo(
+    () => getVideoDimensions(aspectRatio),
+    [aspectRatio],
+  );
+
   const playerInputProps = useMemo(
     () =>
       buildVideoProps({
@@ -169,10 +181,11 @@ export default function PreviewPage() {
         tagline,
         presetName,
         durationInFrames,
+        aspectRatio,
         enableAudio,
         logoUrl: logoUrl ?? undefined,
       }),
-    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, enableAudio, logoUrl],
+    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, enableAudio, logoUrl],
   );
 
   const generateScript = useCallback(async () => {
@@ -345,6 +358,7 @@ export default function PreviewPage() {
             tagline: script.tagline,
             presetName,
             durationInFrames,
+            aspectRatio,
             enableAudio,
             logoUrl: logoUrl ?? undefined,
           }),
@@ -411,9 +425,11 @@ export default function PreviewPage() {
           <StudioSection title="Style">
             <StyleControls
               presetName={presetName}
+              aspectRatio={aspectRatio}
               durationInFrames={durationInFrames}
               enableAudio={enableAudio}
               onPresetChange={setPresetName}
+              onAspectRatioChange={setAspectRatio}
               onDurationChange={setDurationInFrames}
               onAudioChange={setEnableAudio}
             />
@@ -456,10 +472,14 @@ export default function PreviewPage() {
             component={ScreenshotVideo}
             inputProps={playerInputProps}
             durationInFrames={durationInFrames}
-            compositionWidth={1080}
-            compositionHeight={1920}
+            compositionWidth={canvasDimensions.width}
+            compositionHeight={canvasDimensions.height}
             fps={30}
-            style={{ width: "min(42vh * 1080 / 1920, 100%)", maxWidth: 380, aspectRatio: "1080 / 1920" }}
+            style={{
+              width: `min(42vh * ${canvasDimensions.width} / ${canvasDimensions.height}, 100%)`,
+              maxWidth: canvasDimensions.width > canvasDimensions.height ? 520 : 380,
+              aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
+            }}
             controls
             loop
             autoPlay

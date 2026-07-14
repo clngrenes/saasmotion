@@ -1,15 +1,5 @@
 import React from "react";
-import { interpolate, useCurrentFrame } from "remotion";
-
-function typewriterLength(
-  frame: number,
-  text: string,
-  startFrame: number,
-  charsPerFrame = 0.55,
-): number {
-  const elapsed = Math.max(0, frame - startFrame);
-  return Math.min(text.length, Math.floor(elapsed * charsPerFrame));
-}
+import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 
 interface SceneHeadlineProps {
   readonly headline: string;
@@ -24,20 +14,26 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
   localFrame,
   localDuration,
 }) => {
-  const headlineChars = typewriterLength(localFrame, headline, 8);
-  const visibleHeadline = headline.slice(0, headlineChars);
-  const headlineDone = headlineChars >= headline.length;
+  const { width, height } = useVideoConfig();
+  const isLandscape = width > height;
 
-  const sublineOpacity = interpolate(
-    localFrame,
-    [headline.length * 2 + 12, headline.length * 2 + 28],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  const headlineOpacity = interpolate(localFrame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const headlineY = interpolate(localFrame, [0, 18], [16, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const sublineOpacity = interpolate(localFrame, [14, 30], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const containerOpacity = interpolate(
     localFrame,
-    [localDuration - 18, localDuration - 4],
+    [localDuration - 20, localDuration - 6],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -46,14 +42,18 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
     return null;
   }
 
+  const headlineSize = Math.round(width * 0.048);
+  const sublineSize = Math.round(width * 0.026);
+  const paddingX = Math.round(width * 0.05);
+
   return (
     <div
       style={{
         position: "absolute",
-        top: 120,
-        left: 0,
-        right: 0,
-        padding: "0 56px",
+        ...(isLandscape
+          ? { bottom: Math.round(height * 0.08), left: 0, right: 0 }
+          : { top: Math.round(height * 0.06), left: 0, right: 0 }),
+        padding: `0 ${paddingX}px`,
         textAlign: "center",
         opacity: containerOpacity,
         pointerEvents: "none",
@@ -65,28 +65,25 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
           style={{
             margin: 0,
             color: "#ffffff",
-            fontSize: 52,
+            fontSize: headlineSize,
             fontWeight: 700,
             letterSpacing: "-0.03em",
             lineHeight: 1.1,
+            opacity: headlineOpacity,
+            transform: `translateY(${headlineY}px)`,
             fontFamily:
               'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
           }}
         >
-          {visibleHeadline}
-          {!headlineDone && (
-            <span style={{ opacity: interpolate(localFrame % 16, [0, 8, 16], [1, 0, 1]) }}>
-              |
-            </span>
-          )}
+          {headline}
         </h2>
       )}
-      {subline && headlineDone && (
+      {subline && (
         <p
           style={{
-            margin: "16px 0 0",
+            margin: `${Math.round(height * 0.012)}px 0 0`,
             color: "rgba(226, 232, 240, 0.82)",
-            fontSize: 28,
+            fontSize: sublineSize,
             fontWeight: 400,
             lineHeight: 1.35,
             opacity: sublineOpacity,

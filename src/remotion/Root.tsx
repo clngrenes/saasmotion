@@ -2,6 +2,10 @@ import React from "react";
 import { Composition } from "remotion";
 import { ScreenshotVideo } from "./compositions/ScreenshotVideo";
 import {
+  DEFAULT_VIDEO_ASPECT_RATIO,
+  getVideoDimensions,
+} from "./constants/aspect-ratio";
+import {
   DEFAULT_BACKGROUND_MUSIC_URL,
   DEFAULT_TRANSITION_SFX_URL,
 } from "./constants/media";
@@ -9,9 +13,7 @@ import { screenshotVideoSchema } from "./schemas/screenshot-video-schema";
 import type { ScreenshotVideoProps } from "./types/screenshot-video";
 
 const FPS = 30;
-const WIDTH = 1080;
-const HEIGHT = 1920;
-const DEFAULT_DURATION_IN_FRAMES = 150;
+const DEFAULT_DURATION_IN_FRAMES = 300;
 
 const defaultProps = {
   scenes: [
@@ -26,12 +28,15 @@ const defaultProps = {
   tagline: "Cinematic 3D videos from your app screenshots",
   presetName: "zelios-style" as const,
   durationInFrames: DEFAULT_DURATION_IN_FRAMES,
+  aspectRatio: DEFAULT_VIDEO_ASPECT_RATIO,
   backgroundMusicUrl: DEFAULT_BACKGROUND_MUSIC_URL,
   transitionSfxUrl: DEFAULT_TRANSITION_SFX_URL,
   enableAudio: true,
 } satisfies ScreenshotVideoProps;
 
 export const RemotionRoot: React.FC = () => {
+  const { width, height } = getVideoDimensions(DEFAULT_VIDEO_ASPECT_RATIO);
+
   return (
     <Composition
       id="ScreenshotVideo"
@@ -39,12 +44,17 @@ export const RemotionRoot: React.FC = () => {
       schema={screenshotVideoSchema}
       defaultProps={defaultProps}
       fps={FPS}
-      width={WIDTH}
-      height={HEIGHT}
+      width={width}
+      height={height}
       durationInFrames={DEFAULT_DURATION_IN_FRAMES}
-      calculateMetadata={({ props }) => ({
-        durationInFrames: props.durationInFrames,
-      })}
+      calculateMetadata={({ props }) => {
+        const dims = getVideoDimensions(props.aspectRatio);
+        return {
+          durationInFrames: props.durationInFrames,
+          width: dims.width,
+          height: dims.height,
+        };
+      }}
     />
   );
 };

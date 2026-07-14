@@ -1,3 +1,5 @@
+import type { VideoAspectRatioId } from "../constants/aspect-ratio";
+
 /** Preset-IDs — kebab-case, stabil für API/DB/Lambda-Props */
 export const CAMERA_PRESET_NAMES = [
   "zelios-style",
@@ -54,6 +56,7 @@ export type ScreenshotVideoProps = {
   readonly tagline: string;
   readonly presetName: CameraPresetName;
   readonly durationInFrames: number;
+  readonly aspectRatio: VideoAspectRatioId;
   readonly backgroundMusicUrl: string;
   readonly transitionSfxUrl: string;
   readonly enableAudio: boolean;

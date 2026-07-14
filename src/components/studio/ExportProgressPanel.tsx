@@ -16,7 +16,7 @@ interface ExportProgressPanelProps {
 }
 
 function estimateSeconds(sceneCount: number, durationSeconds: number): number {
-  return 25 + sceneCount * 35 + durationSeconds * 4;
+  return 30 + sceneCount * 45 + durationSeconds * 6;
 }
 
 function phaseLabel(phase: ExportPhase, jobStatus: RenderStatus | null): string {
