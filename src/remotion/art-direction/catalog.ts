@@ -41,6 +41,21 @@ export type VideoAspectRatioId = (typeof VIDEO_ASPECT_RATIO_IDS)[number];
 export const VIDEO_DURATION_FRAME_OPTIONS = [900, 1800, 2700, 3600] as const;
 export type VideoDurationFrames = (typeof VIDEO_DURATION_FRAME_OPTIONS)[number];
 
+/** Gemini response_schema requires string enum values — use in AI schema only */
+export const VIDEO_DURATION_FRAME_STRINGS = ["900", "1800", "2700", "3600"] as const;
+export type VideoDurationFrameString = (typeof VIDEO_DURATION_FRAME_STRINGS)[number];
+
+export function parseDurationInFrames(
+  value: string | number,
+  sceneCount = 1,
+): VideoDurationFrames {
+  const frames = typeof value === "number" ? value : Number(value);
+  if (VIDEO_DURATION_FRAME_OPTIONS.includes(frames as VideoDurationFrames)) {
+    return frames as VideoDurationFrames;
+  }
+  return inferDurationFromSceneCount(sceneCount);
+}
+
 export type ArtDirection = {
   readonly reasoning: string;
   readonly cameraPreset: CameraPresetName;

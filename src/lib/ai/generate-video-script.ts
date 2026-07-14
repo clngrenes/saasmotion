@@ -6,6 +6,8 @@ import {
   INTRO_MOTION_IDS,
   ART_DIRECTION_SKILL_GUIDE,
   VIDEO_ASPECT_RATIO_IDS,
+  VIDEO_DURATION_FRAME_STRINGS,
+  parseDurationInFrames,
 } from "../../remotion/art-direction/catalog";
 import {
   AUDIO_SKILL_GUIDE,
@@ -33,12 +35,7 @@ const scriptSchema = z.object({
     frameStyle: z.enum(["phone", "window"]),
     textPreset: z.enum(TEXT_PRESET_IDS as unknown as [TextPresetId, ...TextPresetId[]]),
     aspectRatio: z.enum(VIDEO_ASPECT_RATIO_IDS),
-    durationInFrames: z.union([
-      z.literal(900),
-      z.literal(1800),
-      z.literal(2700),
-      z.literal(3600),
-    ]),
+    durationInFrames: z.enum(VIDEO_DURATION_FRAME_STRINGS),
     background: z.enum(BACKGROUND_STYLE_IDS),
     effects: z.object({
       glass: z.boolean(),
@@ -61,6 +58,27 @@ const scriptSchema = z.object({
     playIntroRevealSfx: z.boolean(),
   }),
 });
+
+type ScriptSchemaOutput = z.infer<typeof scriptSchema>;
+
+function toGeneratedVideoScript(
+  object: ScriptSchemaOutput,
+  sceneCount: number,
+): GeneratedVideoScript {
+  return {
+    productName: object.productName,
+    tagline: object.tagline,
+    scenes: object.scenes,
+    artDirection: {
+      ...object.artDirection,
+      durationInFrames: parseDurationInFrames(
+        object.artDirection.durationInFrames,
+        sceneCount,
+      ),
+    },
+    audioDirection: object.audioDirection,
+  };
+}
 
 function buildPrompt(input: {
   productDescription: string;
@@ -93,7 +111,7 @@ COPY RULES:
 ART DIRECTION RULES:
 - Pick ONE coherent visual direction for the whole video — the founder will not adjust anything
 - aspectRatio: infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)
-- durationInFrames: match screenshot count — 1–2 screens → 900, 3–4 → 1800, 5–6 → 2700, 7+ → 3600
+- durationInFrames: match screenshot count — 1–2 screens → "900", 3–4 → "1800", 5–6 → "2700", 7+ → "3600" (string values)
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
@@ -167,14 +185,11 @@ export async function generateVideoScript(input: {
         subline: object.tagline,
       });
     }
-    return {
-      productName: object.productName,
-      tagline: object.tagline,
-      scenes: scenes.slice(0, sceneCount),
-      artDirection: object.artDirection,
-      audioDirection: object.audioDirection,
-    };
+    return toGeneratedVideoScript(
+      { ...object, scenes: scenes.slice(0, sceneCount) },
+      sceneCount,
+    );
   }
 
-  return object;
+  return toGeneratedVideoScript(object, sceneCount);
 }
