@@ -1,18 +1,20 @@
 import React from "react";
 import { Audio, Sequence, staticFile } from "remotion";
+import type { AudioDirection } from "../constants/audio-catalog";
 import {
-  BACKGROUND_MUSIC_FILE,
-  TRANSITION_SFX_FILE,
-} from "../constants/media";
-import { getSlideStartFrames } from "../lib/slide-timing";
+  DEFAULT_AUDIO_DIRECTION,
+  resolveMusicFile,
+  resolveSfxFile,
+} from "../constants/audio-catalog";
+import { getAudioCues, sfxDurationInFrames } from "../lib/audio-timing";
 
 interface VideoAudioProps {
   readonly durationInFrames: number;
   readonly slideCount: number;
   readonly introDurationFrames: number;
-  readonly backgroundMusicUrl?: string;
-  readonly transitionSfxUrl?: string;
   readonly enableAudio: boolean;
+  readonly audioDirection?: AudioDirection;
+  readonly fps?: number;
 }
 
 function resolveAudioSrc(src: string): string {
@@ -26,30 +28,54 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
   durationInFrames,
   slideCount,
   introDurationFrames,
-  backgroundMusicUrl = BACKGROUND_MUSIC_FILE,
-  transitionSfxUrl = TRANSITION_SFX_FILE,
   enableAudio,
+  audioDirection,
+  fps = 30,
 }) => {
   if (!enableAudio) {
     return null;
   }
 
-  const contentDuration = Math.max(1, durationInFrames - introDurationFrames);
-  const slideStarts = getSlideStartFrames(contentDuration, slideCount).map(
-    (start) => start + introDurationFrames,
-  );
+  const direction = audioDirection ?? DEFAULT_AUDIO_DIRECTION;
 
-  const musicSrc = resolveAudioSrc(backgroundMusicUrl);
-  const sfxSrc = resolveAudioSrc(transitionSfxUrl);
+  if (direction.musicStyle === "none" && direction.transitionSfx === "none") {
+    return null;
+  }
+
+  const musicFile = resolveMusicFile(direction.musicStyle);
+  const sfxFile = resolveSfxFile(direction.transitionSfx);
+  const cues = getAudioCues({
+    durationInFrames,
+    slideCount,
+    introDurationFrames,
+    playIntroRevealSfx: direction.playIntroRevealSfx,
+    transitionSfx: direction.transitionSfx,
+    fps,
+  });
+
+  const sfxDuration = sfxDurationInFrames(direction.transitionSfx, fps);
 
   return (
     <>
-      <Audio src={musicSrc} volume={0.22} loop />
-      {slideStarts.slice(1).map((startFrame) => (
-        <Sequence key={startFrame} from={startFrame} durationInFrames={24}>
-          <Audio src={sfxSrc} volume={0.35} />
-        </Sequence>
-      ))}
+      {musicFile && (
+        <Audio
+          src={resolveAudioSrc(musicFile)}
+          volume={direction.musicVolume}
+          loop
+        />
+      )}
+
+      {sfxFile &&
+        cues.map((cue) => (
+          <Sequence
+            key={`${cue.type}-${cue.frame}`}
+            from={cue.frame}
+            durationInFrames={sfxDuration}
+            layout="none"
+          >
+            <Audio src={resolveAudioSrc(sfxFile)} volume={direction.sfxVolume} />
+          </Sequence>
+        ))}
     </>
   );
 };

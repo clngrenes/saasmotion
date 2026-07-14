@@ -2,7 +2,10 @@ import { PerspectiveCamera } from "@react-three/drei";
 import { ThreeCanvas } from "@remotion/three";
 import React, { useMemo } from "react";
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
+import { BACKGROUND_CSS } from "../art-direction/catalog";
+import { applyIntroMotion, getIntroOpacity } from "../art-direction/intro-motion";
 import { DeviceFrameMesh } from "../components/DeviceFrameMesh";
+import { WindowFrameMesh } from "../components/WindowFrameMesh";
 import { ProductIntro } from "../components/ProductIntro";
 import { SceneHeadline } from "../components/SceneHeadline";
 import { SuspenseLoader } from "../components/SuspenseLoader";
@@ -16,20 +19,20 @@ import {
 } from "../presets";
 import type { ScreenshotVideoProps } from "../types/screenshot-video";
 
-const BACKGROUND =
-  "radial-gradient(120% 120% at 50% 20%, #1b2233 0%, #0a0d15 58%, #05060a 100%)";
-
 export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   scenes,
   productName,
   tagline,
   presetName,
   durationInFrames,
-  backgroundMusicUrl,
-  transitionSfxUrl,
   enableAudio,
+  audioDirection,
   logoUrl,
   textPreset,
+  frameStyle = "window",
+  background = "dark-gradient",
+  panelStyle,
+  introMotion = "scale-in",
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -53,22 +56,43 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
 
   const activeScene = safeScenes[slideIndex] ?? safeScenes[0];
 
-  const { camera, mesh } = computePresetFrame(presetName, {
+  const baseMesh = computePresetFrame(presetName, {
     frame: localFrame,
     durationInFrames: localDuration,
     fps,
-  });
+  }).mesh;
+
+  const mesh = applyIntroMotion(baseMesh, introMotion, localFrame);
+  const meshOpacity = getIntroOpacity(introMotion, localFrame);
   const { fov } = PRESET_CAMERA_CONFIG[presetName];
+  const camera = computePresetFrame(presetName, {
+    frame: localFrame,
+    durationInFrames: localDuration,
+    fps,
+  }).camera;
+
+  const backgroundStyle = BACKGROUND_CSS[background];
 
   return (
-    <AbsoluteFill style={{ background: BACKGROUND }}>
+    <AbsoluteFill style={{ background: backgroundStyle }}>
+      {panelStyle?.backgroundBlur && (
+        <AbsoluteFill
+          style={{
+            background: backgroundStyle,
+            filter: "blur(28px)",
+            opacity: 0.45,
+            transform: "scale(1.08)",
+          }}
+        />
+      )}
+
       <VideoAudio
         durationInFrames={durationInFrames}
         slideCount={safeScenes.length}
         introDurationFrames={INTRO_DURATION_FRAMES}
-        backgroundMusicUrl={backgroundMusicUrl}
-        transitionSfxUrl={transitionSfxUrl}
         enableAudio={enableAudio}
+        audioDirection={audioDirection}
+        fps={fps}
       />
 
       <Sequence from={0} durationInFrames={INTRO_DURATION_FRAMES}>
@@ -92,12 +116,23 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
             <ambientLight intensity={0.6} />
             <directionalLight position={[3, 5, 6]} intensity={1.1} />
             <SuspenseLoader>
-              <DeviceFrameMesh
-                key={activeScene.screenshotUrl}
-                screenshotUrl={activeScene.screenshotUrl}
-                position={mesh.position}
-                rotation={mesh.rotation}
-              />
+              {frameStyle === "window" && panelStyle ? (
+                <WindowFrameMesh
+                  key={activeScene.screenshotUrl}
+                  screenshotUrl={activeScene.screenshotUrl}
+                  position={mesh.position}
+                  rotation={mesh.rotation}
+                  panelStyle={panelStyle}
+                  opacity={meshOpacity}
+                />
+              ) : (
+                <DeviceFrameMesh
+                  key={activeScene.screenshotUrl}
+                  screenshotUrl={activeScene.screenshotUrl}
+                  position={mesh.position}
+                  rotation={mesh.rotation}
+                />
+              )}
             </SuspenseLoader>
           </ThreeCanvas>
 

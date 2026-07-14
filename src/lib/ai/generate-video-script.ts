@@ -1,5 +1,18 @@
 import { generateObject } from "ai";
 import { z } from "zod";
+import {
+  BACKGROUND_STYLE_IDS,
+  CORNER_RADIUS_IDS,
+  INTRO_MOTION_IDS,
+  ART_DIRECTION_SKILL_GUIDE,
+} from "../../remotion/art-direction/catalog";
+import {
+  AUDIO_SKILL_GUIDE,
+  MUSIC_STYLE_IDS,
+  SFX_STYLE_IDS,
+} from "../../remotion/constants/audio-catalog";
+import { TEXT_PRESET_IDS, type TextPresetId } from "../../remotion/text-presets/catalog";
+import { CAMERA_PRESET_NAMES } from "../../remotion/types/screenshot-video";
 import type { GeneratedVideoScript } from "../../types/video-script";
 import { scriptModel } from "./google";
 import { trimProductContext } from "./trim-product-context";
@@ -13,6 +26,32 @@ const scriptSchema = z.object({
       subline: z.string().max(180),
     }),
   ),
+  artDirection: z.object({
+    reasoning: z.string().min(1).max(400),
+    cameraPreset: z.enum(CAMERA_PRESET_NAMES),
+    frameStyle: z.enum(["phone", "window"]),
+    textPreset: z.enum(TEXT_PRESET_IDS as unknown as [TextPresetId, ...TextPresetId[]]),
+    background: z.enum(BACKGROUND_STYLE_IDS),
+    effects: z.object({
+      glass: z.boolean(),
+      dropShadow: z.boolean(),
+      backgroundBlur: z.boolean(),
+    }),
+    style: z.object({
+      cornerRadius: z.enum(CORNER_RADIUS_IDS),
+      stroke: z.boolean(),
+      panelOpacity: z.number().min(0.8).max(1),
+    }),
+    introMotion: z.enum(INTRO_MOTION_IDS),
+  }),
+  audioDirection: z.object({
+    reasoning: z.string().min(1).max(300),
+    musicStyle: z.enum(MUSIC_STYLE_IDS),
+    musicVolume: z.number().min(0.08).max(0.28),
+    transitionSfx: z.enum(SFX_STYLE_IDS),
+    sfxVolume: z.number().min(0.18).max(0.45),
+    playIntroRevealSfx: z.boolean(),
+  }),
 });
 
 function buildPrompt(input: {
@@ -24,13 +63,13 @@ function buildPrompt(input: {
   const sceneCount = Math.max(1, input.screenshotNames.length);
   const context = trimProductContext(input.productContext);
 
-  return `You are a creative director for premium SaaS launch videos (Apple, Linear).
+  return `You are a creative director AND motion art director for premium SaaS launch videos (Apple, Linear, OpenAI).
 
-Write a short, punchy promo script in English.
+Write a short, punchy promo script in English AND choose the best visual art direction from the skill catalog below.
 
-${input.hasVision ? "You can SEE each screenshot image below — study the UI carefully." : "You only have screenshot file names — stay generic and avoid inventing specific UI details."}
+${input.hasVision ? "You can SEE each screenshot image below — study the UI carefully (layout, colors, roundness, mobile vs desktop)." : "You only have screenshot file names — infer platform from names when possible."}
 
-Rules:
+COPY RULES:
 - Exactly ${sceneCount} scenes — one per screenshot, in upload order
 - Each headline/subline MUST match what is visible on that specific screenshot
 - Cross-check with product context (.env/README) — do not contradict the product
@@ -40,6 +79,23 @@ Rules:
 - Scene 1 = strong hook for what the first screen shows
 - Final scene = CTA or key benefit from the last screen
 - Never quote secrets from env files
+
+ART DIRECTION RULES:
+- Pick ONE coherent visual direction for the whole video
+- Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
+- Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
+- dropShadow: true for floating window panels; false only for flat minimal on white
+- reasoning: 1–2 sentences explaining your creative choices
+
+${ART_DIRECTION_SKILL_GUIDE}
+
+AUDIO RULES:
+- Also pick music + transition SFX that match the visual direction
+- SFX must feel synced to scene cuts — whoosh for cinematic, soft for enterprise, pop for upbeat
+- playIntroRevealSfx: true when intro title leads into first screenshot (default true)
+- Do NOT pick musicStyle none unless solid-white keynote minimal
+
+${AUDIO_SKILL_GUIDE}
 
 Product description:
 ${input.productDescription}
@@ -103,6 +159,8 @@ export async function generateVideoScript(input: {
       productName: object.productName,
       tagline: object.tagline,
       scenes: scenes.slice(0, sceneCount),
+      artDirection: object.artDirection,
+      audioDirection: object.audioDirection,
     };
   }
 

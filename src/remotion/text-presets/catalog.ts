@@ -33,6 +33,16 @@ export const TEXT_PRESET_CATEGORIES = [
       { id: "shrink", label: "Shrink", hint: "−" },
     ],
   },
+  {
+    id: "kinetic",
+    label: "Kinetic (Pro)",
+    presets: [
+      { id: "kinetic-pills", label: "Pill Stagger", hint: "⊂" },
+      { id: "kinetic-words", label: "Word Reveal", hint: "▤" },
+      { id: "kinetic-chat", label: "Chat Stack", hint: "≡" },
+      { id: "kinetic-timeline", label: "Timeline", hint: "⁞" },
+    ],
+  },
 ] as const;
 
 export type TextPresetId =

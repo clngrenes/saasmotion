@@ -2,6 +2,13 @@ import React from "react";
 import { Composition } from "remotion";
 import { ScreenshotVideo } from "./compositions/ScreenshotVideo";
 import {
+  DEFAULT_ART_DIRECTION,
+  artDirectionToPanelStyle,
+} from "./art-direction/catalog";
+import {
+  DEFAULT_AUDIO_DIRECTION,
+} from "./constants/audio-catalog";
+import {
   DEFAULT_VIDEO_ASPECT_RATIO,
   getVideoDimensions,
 } from "./constants/aspect-ratio";
@@ -16,7 +23,7 @@ import { screenshotVideoSchema } from "./schemas/screenshot-video-schema";
 import type { ScreenshotVideoProps } from "./types/screenshot-video";
 
 const FPS = 30;
-const DEFAULT_DURATION_IN_FRAMES = 300;
+const DEFAULT_DURATION_IN_FRAMES = 900;
 
 const defaultProps = {
   scenes: [
@@ -27,7 +34,7 @@ const defaultProps = {
       subline: "From screenshots to product videos in minutes",
     },
   ],
-  productName: "SaaMotion",
+  productName: "SaasMotion",
   tagline: "Cinematic 3D videos from your app screenshots",
   presetName: "zelios-style" as const,
   durationInFrames: DEFAULT_DURATION_IN_FRAMES,
@@ -36,6 +43,11 @@ const defaultProps = {
   backgroundMusicUrl: DEFAULT_BACKGROUND_MUSIC_URL,
   transitionSfxUrl: DEFAULT_TRANSITION_SFX_URL,
   enableAudio: true,
+  frameStyle: "window",
+  background: DEFAULT_ART_DIRECTION.background,
+  panelStyle: artDirectionToPanelStyle(DEFAULT_ART_DIRECTION),
+  introMotion: DEFAULT_ART_DIRECTION.introMotion,
+  audioDirection: DEFAULT_AUDIO_DIRECTION,
 } satisfies ScreenshotVideoProps;
 
 export const RemotionRoot: React.FC = () => {

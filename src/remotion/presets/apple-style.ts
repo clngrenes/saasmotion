@@ -1,34 +1,28 @@
-import { Easing, interpolate } from "remotion";
+import { Easing } from "remotion";
 import type { PresetComputeFn, Vec3 } from "../types/screenshot-video";
-import { ORIGIN } from "./shared";
+import { interpolateVec3, ORIGIN } from "./shared";
 
-/** Gleichmäßige Rotation ohne harte Kanten */
+/** Sanfte, gleichmäßige Kurve — kein harter Start/Stop */
 const EASE = Easing.inOut(Easing.cubic);
 
-const CAMERA_POSITION: Vec3 = [0, 0, 6.5];
-
-/** ~63° Gesamtdrehung um die Y-Achse */
-const MAX_Y_ROTATION = Math.PI * 0.35;
-/** Subtiler X-Tilt für zusätzliche Tiefenwirkung */
-const TILT_X_START = -0.05;
-const TILT_X_END = 0.05;
+const CAMERA_POSITION: Vec3 = [0, 0.25, 7.0];
 
 /**
- * "Apple-Style" — statische Kamera; der Screen dreht sich selbst um seine
- * Y-Achse und kippt dabei minimal auf der X-Achse.
+ * Isometrischer Start (seitlich geneigt) → sanfter Übergang zu leicht
+ * top-down — ähnlich wie bei Premium Product-Demos.
+ */
+const MESH_START_ROTATION: Vec3 = [0.42, -0.38, 0.01];
+const MESH_END_ROTATION: Vec3 = [0.16, 0.3, -0.01];
+
+/**
+ * "Apple-Style" / Orbit — das Interface dreht sich smooth durch einen
+ * isometrischen Bogen (X + Y), Kamera bleibt leicht erhöht und statisch.
  */
 export const computeAppleStyle: PresetComputeFn = ({
   frame,
   durationInFrames,
 }) => {
   const range: readonly [number, number] = [0, durationInFrames];
-  const options = {
-    extrapolateLeft: "clamp" as const,
-    extrapolateRight: "clamp" as const,
-    easing: EASE,
-  };
-  const rotationY = interpolate(frame, range, [0, MAX_Y_ROTATION], options);
-  const rotationX = interpolate(frame, range, [TILT_X_START, TILT_X_END], options);
 
   return {
     camera: {
@@ -37,7 +31,13 @@ export const computeAppleStyle: PresetComputeFn = ({
     },
     mesh: {
       position: ORIGIN,
-      rotation: [rotationX, rotationY, 0],
+      rotation: interpolateVec3(
+        frame,
+        range,
+        MESH_START_ROTATION,
+        MESH_END_ROTATION,
+        EASE,
+      ),
     },
   };
 };

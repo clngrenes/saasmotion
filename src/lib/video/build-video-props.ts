@@ -1,4 +1,8 @@
 import {
+  DEFAULT_ART_DIRECTION,
+  artDirectionToPanelStyle,
+} from "../../remotion/art-direction/catalog";
+import {
   DEFAULT_VIDEO_ASPECT_RATIO,
   type VideoAspectRatioId,
 } from "../../remotion/constants/aspect-ratio";
@@ -10,6 +14,18 @@ import {
   DEFAULT_BACKGROUND_MUSIC_URL,
   DEFAULT_TRANSITION_SFX_URL,
 } from "../../remotion/constants/media";
+import {
+  DEFAULT_AUDIO_DIRECTION,
+  resolveMusicFile,
+  resolveSfxFile,
+  type AudioDirection,
+} from "../../remotion/constants/audio-catalog";
+import type {
+  ArtDirection,
+  BackgroundStyleId,
+  IntroMotionId,
+  PanelVisualStyle,
+} from "../../remotion/art-direction/catalog";
 import type { CameraPresetName, VideoScene } from "../../remotion/types/screenshot-video";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
 import type { GeneratedSceneCopy } from "../../types/video-script";
@@ -57,7 +73,18 @@ export function buildVideoProps(input: {
   backgroundMusicUrl?: string;
   transitionSfxUrl?: string;
   logoUrl?: string;
+  frameStyle?: "phone" | "window";
+  artDirection?: ArtDirection;
+  background?: BackgroundStyleId;
+  panelStyle?: PanelVisualStyle;
+  introMotion?: IntroMotionId;
+  audioDirection?: AudioDirection;
 }): ScreenshotVideoProps {
+  const art = input.artDirection ?? DEFAULT_ART_DIRECTION;
+  const audio = input.audioDirection ?? DEFAULT_AUDIO_DIRECTION;
+  const musicFile = resolveMusicFile(audio.musicStyle);
+  const sfxFile = resolveSfxFile(audio.transitionSfx);
+
   return {
     scenes: input.scenes,
     productName: input.productName,
@@ -65,10 +92,17 @@ export function buildVideoProps(input: {
     presetName: input.presetName,
     durationInFrames: input.durationInFrames,
     aspectRatio: input.aspectRatio ?? DEFAULT_VIDEO_ASPECT_RATIO,
-    textPreset: input.textPreset ?? DEFAULT_TEXT_PRESET,
+    textPreset: input.textPreset ?? art.textPreset,
     enableAudio: input.enableAudio ?? true,
-    backgroundMusicUrl: input.backgroundMusicUrl ?? DEFAULT_BACKGROUND_MUSIC_URL,
-    transitionSfxUrl: input.transitionSfxUrl ?? DEFAULT_TRANSITION_SFX_URL,
+    backgroundMusicUrl:
+      input.backgroundMusicUrl ?? musicFile ?? DEFAULT_BACKGROUND_MUSIC_URL,
+    transitionSfxUrl:
+      input.transitionSfxUrl ?? sfxFile ?? DEFAULT_TRANSITION_SFX_URL,
     logoUrl: input.logoUrl,
+    frameStyle: input.frameStyle ?? art.frameStyle,
+    background: input.background ?? art.background,
+    panelStyle: input.panelStyle ?? artDirectionToPanelStyle(art),
+    introMotion: input.introMotion ?? art.introMotion,
+    audioDirection: audio,
   };
 }

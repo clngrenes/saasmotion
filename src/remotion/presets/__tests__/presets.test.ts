@@ -52,7 +52,7 @@ describe("zelios-style", () => {
 });
 
 describe("apple-style", () => {
-  it("keeps the camera fixed while rotating the mesh around Y", () => {
+  it("smoothly rotates the mesh through an isometric arc", () => {
     const start = computePresetFrame("apple-style", ctx(0));
     const mid = computePresetFrame("apple-style", ctx(DURATION / 2));
     const end = computePresetFrame("apple-style", ctx(DURATION));
@@ -60,8 +60,9 @@ describe("apple-style", () => {
     expect(start.camera.position).toEqual(end.camera.position);
     expect(start.camera.rotation).toEqual([0, 0, 0]);
 
-    expect(start.mesh.rotation[1]).toBeCloseTo(0, 5);
-    expect(end.mesh.rotation[1]).toBeCloseTo(Math.PI * 0.35, 5);
+    expect(start.mesh.rotation[0]).toBeGreaterThan(end.mesh.rotation[0]);
+    expect(start.mesh.rotation[1]).toBeLessThan(0);
+    expect(end.mesh.rotation[1]).toBeGreaterThan(0);
     expect(mid.mesh.rotation[1]).toBeGreaterThan(start.mesh.rotation[1]);
     expect(mid.mesh.rotation[1]).toBeLessThan(end.mesh.rotation[1]);
   });

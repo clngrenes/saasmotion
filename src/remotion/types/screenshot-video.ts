@@ -1,5 +1,11 @@
 import type { VideoAspectRatioId } from "../constants/aspect-ratio";
 import type { TextPresetId } from "../text-presets/catalog";
+import type {
+  BackgroundStyleId,
+  IntroMotionId,
+  PanelVisualStyle,
+} from "../art-direction/catalog";
+import type { AudioDirection } from "../constants/audio-catalog";
 
 /** Preset-IDs — kebab-case, stabil für API/DB/Lambda-Props */
 export const CAMERA_PRESET_NAMES = [
@@ -51,6 +57,8 @@ export type VideoScene = {
  * `Props extends Record<string, unknown>` verlangt — dafür wird die implizite
  * Index-Signatur eines Type-Alias benötigt.
  */
+export type FrameStyleId = "phone" | "window";
+
 export type ScreenshotVideoProps = {
   readonly scenes: readonly VideoScene[];
   readonly productName: string;
@@ -63,6 +71,11 @@ export type ScreenshotVideoProps = {
   readonly transitionSfxUrl: string;
   readonly enableAudio: boolean;
   readonly logoUrl?: string;
+  readonly frameStyle: FrameStyleId;
+  readonly background: BackgroundStyleId;
+  readonly panelStyle: PanelVisualStyle;
+  readonly introMotion: IntroMotionId;
+  readonly audioDirection: AudioDirection;
 };
 
 /** Device-Frame Geometrie-Konstanten (Option B Default) */

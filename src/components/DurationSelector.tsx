@@ -5,16 +5,16 @@ import React from "react";
 const FPS = 30;
 
 export const VIDEO_DURATION_OPTIONS = [
-  { frames: 300, label: "10s", description: "Short" },
-  { frames: 600, label: "20s", description: "Standard" },
-  { frames: 900, label: "30s", description: "Detailed" },
-  { frames: 1200, label: "40s", description: "Full tour" },
+  { frames: 900, label: "30s", description: "Short" },
+  { frames: 1800, label: "1:00", description: "Standard" },
+  { frames: 2700, label: "1:30", description: "Detailed" },
+  { frames: 3600, label: "2:00", description: "Full tour" },
 ] as const;
 
 export type VideoDurationFrames =
   (typeof VIDEO_DURATION_OPTIONS)[number]["frames"];
 
-export const DEFAULT_VIDEO_DURATION_FRAMES: VideoDurationFrames = 300;
+export const DEFAULT_VIDEO_DURATION_FRAMES: VideoDurationFrames = 900;
 
 interface DurationSelectorProps {
   readonly value: VideoDurationFrames;

@@ -12,6 +12,7 @@ import {
 import {
   CAMERA_PRESET_NAMES,
   type CameraPresetName,
+  type FrameStyleId,
 } from "../../remotion/types/screenshot-video";
 
 interface StyleControlsProps {
@@ -19,15 +20,17 @@ interface StyleControlsProps {
   readonly aspectRatio: VideoAspectRatioId;
   readonly durationInFrames: VideoDurationFrames;
   readonly enableAudio: boolean;
+  readonly frameStyle: FrameStyleId;
   readonly onPresetChange: (value: CameraPresetName) => void;
   readonly onAspectRatioChange: (value: VideoAspectRatioId) => void;
   readonly onDurationChange: (value: VideoDurationFrames) => void;
   readonly onAudioChange: (value: boolean) => void;
+  readonly onFrameStyleChange: (value: FrameStyleId) => void;
 }
 
 const PRESET_LABELS: Record<CameraPresetName, string> = {
   "zelios-style": "Dolly",
-  "apple-style": "Orbit",
+  "apple-style": "3D Orbit",
   "minimal-flat": "Slide",
 };
 
@@ -36,10 +39,12 @@ export const StyleControls: React.FC<StyleControlsProps> = ({
   aspectRatio,
   durationInFrames,
   enableAudio,
+  frameStyle,
   onPresetChange,
   onAspectRatioChange,
   onDurationChange,
   onAudioChange,
+  onFrameStyleChange,
 }) => (
   <div className="flex flex-col gap-4">
     <div>
@@ -109,6 +114,38 @@ export const StyleControls: React.FC<StyleControlsProps> = ({
             {option.label}
           </button>
         ))}
+      </div>
+    </div>
+
+    <div>
+      <p className="mb-2 text-[10px] uppercase tracking-[0.16em] text-zinc-600">
+        Frame Style
+      </p>
+      <div className="grid grid-cols-2 gap-1.5">
+        <button
+          type="button"
+          onClick={() => onFrameStyleChange("window")}
+          className={[
+            "rounded-lg py-2 text-center text-[11px] transition-colors",
+            frameStyle === "window"
+              ? "bg-white/10 text-white ring-1 ring-white/15"
+              : "text-zinc-600 hover:text-zinc-400",
+          ].join(" ")}
+        >
+          Desktop Window
+        </button>
+        <button
+          type="button"
+          onClick={() => onFrameStyleChange("phone")}
+          className={[
+            "rounded-lg py-2 text-center text-[11px] transition-colors",
+            frameStyle === "phone"
+              ? "bg-white/10 text-white ring-1 ring-white/15"
+              : "text-zinc-600 hover:text-zinc-400",
+          ].join(" ")}
+        >
+          Phone Frame
+        </button>
       </div>
     </div>
 

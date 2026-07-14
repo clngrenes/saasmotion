@@ -28,11 +28,19 @@ import {
   buildVideoProps,
   mergeScenesWithCopy,
 } from "../lib/video/build-video-props";
+import { generatedArtDirectionToArtDirection } from "../lib/video/art-direction";
+import {
+  generatedAudioDirectionToAudioDirection,
+  shouldEnableAudio,
+} from "../lib/video/audio-direction";
+import type { ArtDirection } from "../remotion/art-direction/catalog";
+import type { AudioDirection } from "../remotion/constants/audio-catalog";
+import { isTextPresetId } from "../remotion/text-presets/catalog";
 import { ScreenshotVideo } from "../remotion/compositions/ScreenshotVideo";
-import type { CameraPresetName } from "../remotion/types/screenshot-video";
+import type { CameraPresetName, FrameStyleId } from "../remotion/types/screenshot-video";
 import type { RenderStatus } from "../types/render-job";
 import type { ScreenshotItem } from "../types/screenshot";
-import type { GeneratedSceneCopy } from "../types/video-script";
+import type { GeneratedSceneCopy, GeneratedVideoScript } from "../types/video-script";
 
 const DEFAULT_PREVIEW_URLS = [
   "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
@@ -76,12 +84,12 @@ export default function PreviewPage() {
 
   const [productDescription, setProductDescription] = useState("");
   const [productContext, setProductContext] = useState("");
-  const [productName, setProductName] = useState("SaaMotion");
+  const [productName, setProductName] = useState("SaasMotion");
   const [tagline, setTagline] = useState("Cinematic product videos from screenshots");
   const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
   const [exportPhase, setExportPhase] = useState<ExportPhase>("idle");
   const [exportError, setExportError] = useState<string | null>(null);
-  const [enableAudio, setEnableAudio] = useState(true);
+  const [enableAudio, setEnableAudio] = useState(false);
 
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -89,12 +97,15 @@ export default function PreviewPage() {
   const [logoError, setLogoError] = useState<string | null>(null);
 
   const [presetName, setPresetName] = useState<CameraPresetName>("zelios-style");
+  const [frameStyle, setFrameStyle] = useState<FrameStyleId>("window");
   const [aspectRatio, setAspectRatio] =
     useState<VideoAspectRatioId>(DEFAULT_VIDEO_ASPECT_RATIO);
   const [textPreset, setTextPreset] =
     useState<TextPresetId>(DEFAULT_TEXT_PRESET);
   const [durationInFrames, setDurationInFrames] =
     useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
+  const [artDirection, setArtDirection] = useState<ArtDirection | null>(null);
+  const [audioDirection, setAudioDirection] = useState<AudioDirection | null>(null);
 
   const [isRendering, setIsRendering] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -190,10 +201,13 @@ export default function PreviewPage() {
         durationInFrames,
         aspectRatio,
         textPreset,
-        enableAudio,
+        enableAudio: false,
         logoUrl: logoUrl ?? undefined,
+        frameStyle,
+        artDirection: artDirection ?? undefined,
+        audioDirection: audioDirection ?? undefined,
       }),
-    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, enableAudio, logoUrl],
+    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, logoUrl, frameStyle, artDirection, audioDirection],
   );
 
   const generateScript = useCallback(async () => {
@@ -226,10 +240,22 @@ export default function PreviewPage() {
       productName: string;
       tagline: string;
       scenes: GeneratedSceneCopy[];
+      artDirection: GeneratedVideoScript["artDirection"];
+      audioDirection: GeneratedVideoScript["audioDirection"];
     };
+    const directed = generatedArtDirectionToArtDirection(data.artDirection);
+    const audio = generatedAudioDirectionToAudioDirection(data.audioDirection);
     setProductName(data.productName);
     setTagline(data.tagline);
     setSceneCopy(data.scenes);
+    setPresetName(directed.cameraPreset);
+    setFrameStyle(directed.frameStyle);
+    setTextPreset(
+      isTextPresetId(directed.textPreset) ? directed.textPreset : DEFAULT_TEXT_PRESET,
+    );
+    setArtDirection(directed);
+    setAudioDirection(audio);
+    setEnableAudio(shouldEnableAudio(audio));
     return data;
   }, [items, productContext, productDescription, uploadedUrls]);
 
@@ -370,6 +396,9 @@ export default function PreviewPage() {
             textPreset,
             enableAudio,
             logoUrl: logoUrl ?? undefined,
+            frameStyle,
+            artDirection: artDirection ?? undefined,
+            audioDirection: audioDirection ?? undefined,
           }),
         }),
       });
@@ -395,7 +424,7 @@ export default function PreviewPage() {
     <div className="flex h-screen w-full overflow-hidden bg-[var(--studio-bg)]">
       <aside className="flex w-[min(100%,380px)] shrink-0 flex-col border-r border-white/6 bg-[var(--studio-panel)]">
         <header className="border-b border-white/6 px-6 py-5">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-600">SaaMotion</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-600">SaasMotion</p>
           <h1 className="mt-1 text-lg font-medium tracking-tight text-white">
             {productName}
           </h1>
@@ -436,15 +465,74 @@ export default function PreviewPage() {
           </StudioSection>
 
           <StudioSection title="Style">
+            {artDirection && (
+              <div className="mb-4 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                  AI Art Director
+                </p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-400">
+                  {artDirection.reasoning}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {[
+                    artDirection.cameraPreset,
+                    artDirection.frameStyle,
+                    artDirection.background,
+                    artDirection.introMotion,
+                    artDirection.effects.glass && "glass",
+                    artDirection.effects.dropShadow && "shadow",
+                    artDirection.effects.backgroundBlur && "blur",
+                    artDirection.style.stroke && "stroke",
+                  ]
+                    .filter(Boolean)
+                    .map((skill) => (
+                      <span
+                        key={String(skill)}
+                        className="rounded-md bg-white/6 px-1.5 py-0.5 text-[10px] text-zinc-300"
+                      >
+                        {String(skill)}
+                      </span>
+                    ))}
+                </div>
+                {audioDirection && (
+                  <>
+                    <p className="mt-3 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                      AI Sound
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">
+                      {audioDirection.reasoning}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {[
+                        audioDirection.musicStyle !== "none" && `music: ${audioDirection.musicStyle}`,
+                        audioDirection.transitionSfx !== "none" && `sfx: ${audioDirection.transitionSfx}`,
+                        audioDirection.playIntroRevealSfx && "intro hit",
+                      ]
+                        .filter(Boolean)
+                        .map((skill) => (
+                          <span
+                            key={String(skill)}
+                            className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-300"
+                          >
+                            {String(skill)}
+                          </span>
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             <StyleControls
               presetName={presetName}
               aspectRatio={aspectRatio}
               durationInFrames={durationInFrames}
               enableAudio={enableAudio}
+              frameStyle={frameStyle}
               onPresetChange={setPresetName}
               onAspectRatioChange={setAspectRatio}
               onDurationChange={setDurationInFrames}
               onAudioChange={setEnableAudio}
+              onFrameStyleChange={setFrameStyle}
             />
           </StudioSection>
         </div>

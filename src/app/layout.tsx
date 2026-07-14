@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaMotion — Cinematic 3D product videos from screenshots",
+  title: "SaasMotion — Cinematic 3D product videos from screenshots",
   description:
     "Turn app screenshots into agency-style 3D demo videos with camera presets. No timeline, no After Effects.",
 };

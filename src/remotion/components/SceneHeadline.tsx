@@ -6,6 +6,9 @@ import {
   computeTextEnter,
   computeTextExit,
 } from "../text-presets/compute";
+import { StaggeredWords } from "./kinetic/StaggeredWords";
+import { ChatBubbleStack } from "./kinetic/ChatBubbleStack";
+import { KineticTimeline } from "./kinetic/KineticTimeline";
 
 interface SceneHeadlineProps {
   readonly headline: string;
@@ -43,6 +46,54 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
     `translateY(${enter.translateY + exit.translateY}px)`,
     `scale(${enter.scale})`,
   ].join(" ");
+
+  const isKinetic = textPreset.startsWith("kinetic-");
+
+  if (isKinetic) {
+    return (
+      <div
+        style={{
+          position: "absolute",
+          ...(isLandscape
+            ? { bottom: Math.round(height * 0.08), left: 0, right: 0 }
+            : { top: Math.round(height * 0.06), left: 0, right: 0 }),
+          padding: `0 ${paddingX}px`,
+          textAlign: textPreset === "kinetic-timeline" ? "left" : "center",
+          pointerEvents: "none",
+          zIndex: 20,
+          opacity: exit.opacity,
+          transform: `translateY(${exit.translateY}px)`,
+          fontSize: headlineSize,
+          fontWeight: 600,
+          fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: textPreset === "kinetic-timeline" ? "flex-start" : "center",
+          gap: "0.5em",
+        }}
+      >
+        {textPreset === "kinetic-timeline" && (
+          <KineticTimeline
+            headline={headline}
+            subline={subline}
+            localFrame={localFrame}
+          />
+        )}
+        {textPreset === "kinetic-pills" && (
+          <StaggeredWords text={headline} localFrame={localFrame} variant="pills" />
+        )}
+        {textPreset === "kinetic-words" && (
+          <StaggeredWords text={headline} localFrame={localFrame} variant="words" />
+        )}
+        {textPreset === "kinetic-chat" && (
+          <ChatBubbleStack
+            lines={[headline, subline].filter(Boolean)}
+            localFrame={localFrame}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
