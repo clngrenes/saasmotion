@@ -66,7 +66,17 @@ export const ExportProgressPanel: React.FC<ExportProgressPanelProps> = ({
   onReset,
 }) => {
   const [progress, setProgress] = useState(8);
+  const [renderStartedAt, setRenderStartedAt] = useState<number | null>(null);
   const etaSeconds = estimateSeconds(sceneCount, durationSeconds);
+
+  useEffect(() => {
+    if (phase === "rendering" && renderStartedAt === null) {
+      setRenderStartedAt(Date.now());
+    }
+    if (phase !== "rendering") {
+      setRenderStartedAt(null);
+    }
+  }, [phase, renderStartedAt]);
 
   useEffect(() => {
     if (phase === "idle") {
@@ -82,28 +92,39 @@ export const ExportProgressPanel: React.FC<ExportProgressPanelProps> = ({
     const targets: Record<ExportPhase, number> = {
       idle: 0,
       script: 22,
-      queued: 32,
+      queued: 36,
       rendering: 88,
       done: 100,
-      failed: progress,
+      failed: 97,
     };
 
     const target = targets[phase];
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (phase === "rendering" && p >= 88) return Math.min(p + 0.15, 94);
+        if (phase === "rendering") {
+          const started = renderStartedAt ?? Date.now();
+          const elapsed = (Date.now() - started) / 1000;
+          const timeBased = 88 + Math.min((elapsed / Math.max(etaSeconds, 1)) * 9, 9);
+          return Math.max(p, Math.min(timeBased, 97));
+        }
         if (p >= target) return p;
         return Math.min(p + 1.2, target);
       });
     }, 400);
 
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [phase, etaSeconds, renderStartedAt]);
 
   if (phase === "idle") return null;
 
   const label = phaseLabel(phase, jobStatus);
-  const remaining = Math.max(0, Math.round((etaSeconds * (100 - progress)) / 100));
+  const etaMinutes = Math.max(1, Math.ceil(etaSeconds / 60));
+  const statusHint =
+    phase === "rendering"
+      ? `Usually ${etaMinutes}–${etaMinutes + 2} min for ${sceneCount} screenshots — still working`
+      : phase === "queued"
+        ? "Starting render server…"
+        : null;
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/55 p-8 backdrop-blur-sm">
@@ -120,9 +141,7 @@ export const ExportProgressPanel: React.FC<ExportProgressPanelProps> = ({
 
         <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
           <span>{Math.round(progress)}%</span>
-          {phase !== "done" && phase !== "failed" && (
-            <span>~{remaining < 60 ? `${remaining}s` : `${Math.ceil(remaining / 60)} min`} remaining</span>
-          )}
+          {statusHint && <span className="text-right">{statusHint}</span>}
         </div>
 
         <ol className="mt-8 flex flex-col gap-3">
