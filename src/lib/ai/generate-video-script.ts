@@ -5,6 +5,7 @@ import {
   CORNER_RADIUS_IDS,
   INTRO_MOTION_IDS,
   ART_DIRECTION_SKILL_GUIDE,
+  VIDEO_ASPECT_RATIO_IDS,
 } from "../../remotion/art-direction/catalog";
 import {
   AUDIO_SKILL_GUIDE,
@@ -31,6 +32,13 @@ const scriptSchema = z.object({
     cameraPreset: z.enum(CAMERA_PRESET_NAMES),
     frameStyle: z.enum(["phone", "window"]),
     textPreset: z.enum(TEXT_PRESET_IDS as unknown as [TextPresetId, ...TextPresetId[]]),
+    aspectRatio: z.enum(VIDEO_ASPECT_RATIO_IDS),
+    durationInFrames: z.union([
+      z.literal(900),
+      z.literal(1800),
+      z.literal(2700),
+      z.literal(3600),
+    ]),
     background: z.enum(BACKGROUND_STYLE_IDS),
     effects: z.object({
       glass: z.boolean(),
@@ -65,7 +73,9 @@ function buildPrompt(input: {
 
   return `You are a creative director AND motion art director for premium SaaS launch videos (Apple, Linear, OpenAI).
 
-Write a short, punchy promo script in English AND choose the best visual art direction from the skill catalog below.
+The user is a founder — they know their product, NOT motion design. You decide EVERYTHING visual and sonic: format, length, camera, text animation, music, SFX. They only upload screenshots and an optional brief.
+
+Write a short, punchy promo script in English AND choose the complete creative direction from the skill catalog below.
 
 ${input.hasVision ? "You can SEE each screenshot image below — study the UI carefully (layout, colors, roundness, mobile vs desktop)." : "You only have screenshot file names — infer platform from names when possible."}
 
@@ -81,11 +91,13 @@ COPY RULES:
 - Never quote secrets from env files
 
 ART DIRECTION RULES:
-- Pick ONE coherent visual direction for the whole video
+- Pick ONE coherent visual direction for the whole video — the founder will not adjust anything
+- aspectRatio: infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)
+- durationInFrames: match screenshot count — 1–2 screens → 900, 3–4 → 1800, 5–6 → 2700, 7+ → 3600
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
-- reasoning: 1–2 sentences explaining your creative choices
+- reasoning: 1–2 sentences in plain English (founder-friendly, no jargon)
 
 ${ART_DIRECTION_SKILL_GUIDE}
 

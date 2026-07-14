@@ -9,6 +9,8 @@ export type GeneratedArtDirection = {
   readonly cameraPreset: "zelios-style" | "apple-style" | "minimal-flat";
   readonly frameStyle: "phone" | "window";
   readonly textPreset: string;
+  readonly aspectRatio: "9:16" | "16:9" | "1:1" | "4:5";
+  readonly durationInFrames: 900 | 1800 | 2700 | 3600;
   readonly background: "dark-gradient" | "cinematic-space" | "solid-white" | "solid-dark";
   readonly effects: {
     readonly glass: boolean;

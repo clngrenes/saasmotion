@@ -29,11 +29,25 @@ export type PanelVisualStyle = {
 };
 
 /** Vollständige Art-Direction — die KI wählt aus dem Skill-Katalog */
+export const VIDEO_ASPECT_RATIO_IDS = [
+  "9:16",
+  "16:9",
+  "1:1",
+  "4:5",
+] as const;
+
+export type VideoAspectRatioId = (typeof VIDEO_ASPECT_RATIO_IDS)[number];
+
+export const VIDEO_DURATION_FRAME_OPTIONS = [900, 1800, 2700, 3600] as const;
+export type VideoDurationFrames = (typeof VIDEO_DURATION_FRAME_OPTIONS)[number];
+
 export type ArtDirection = {
   readonly reasoning: string;
   readonly cameraPreset: CameraPresetName;
   readonly frameStyle: FrameStyleId;
   readonly textPreset: TextPresetId;
+  readonly aspectRatio: VideoAspectRatioId;
+  readonly durationInFrames: VideoDurationFrames;
   readonly background: BackgroundStyleId;
   readonly effects: {
     readonly glass: boolean;
@@ -53,6 +67,8 @@ export const DEFAULT_ART_DIRECTION: ArtDirection = {
   cameraPreset: "apple-style",
   frameStyle: "window",
   textPreset: DEFAULT_TEXT_PRESET,
+  aspectRatio: "16:9",
+  durationInFrames: 900,
   background: "dark-gradient",
   effects: {
     glass: false,
@@ -125,9 +141,28 @@ INTRO MOTION (per scene entrance):
 - fade: minimal/editorial
 - none: already busy UI, let camera do the work
 
-Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow.
-Mobile consumer → phone + slide + grow. AI/futuristic → window + orbit + cinematic-space + glass.
+FORMAT (aspect ratio — pick for the founder, they will not choose):
+- 9:16: mobile apps, TikTok/Reels, tall phone screenshots
+- 16:9: desktop SaaS, YouTube, website hero, wide UI screenshots (default for web products)
+- 1:1: Instagram feed, square marketing
+- 4:5: Instagram portrait feed
+
+LENGTH (durationInFrames — pick based on screenshot count + story depth):
+- 900 (30s): 1–2 screens, quick hook
+- 1800 (60s): 3–4 screens, standard launch
+- 2700 (90s): 5–6 screens, feature tour
+- 3600 (120s): 7+ screens or deep workflow story
+
+Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9.
+Mobile consumer → phone + slide + grow + 9:16. AI/futuristic → window + orbit + cinematic-space + glass.
 `;
+
+export function inferDurationFromSceneCount(sceneCount: number): VideoDurationFrames {
+  if (sceneCount <= 2) return 900;
+  if (sceneCount <= 4) return 1800;
+  if (sceneCount <= 6) return 2700;
+  return 3600;
+}
 
 export function artDirectionToPanelStyle(art: ArtDirection): PanelVisualStyle {
   return {

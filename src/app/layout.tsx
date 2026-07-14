@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaasMotion — Cinematic 3D product videos from screenshots",
+  title: "SaasMotion — Product videos from screenshots",
   description:
-    "Turn app screenshots into agency-style 3D demo videos with camera presets. No timeline, no After Effects.",
+    "Upload app screenshots. AI handles motion, copy, music, and format — you get a launch-ready video.",
 };
 
 export default function RootLayout({

@@ -6,8 +6,6 @@ import { AssetDropzone } from "../components/studio/AssetDropzone";
 import { BriefForm } from "../components/studio/BriefForm";
 import { ExportProgressPanel, type ExportPhase } from "../components/studio/ExportProgressPanel";
 import { LogoDropzone } from "../components/studio/LogoDropzone";
-import { TextPresetPicker } from "../components/studio/TextPresetPicker";
-import { StyleControls } from "../components/studio/StyleControls";
 import { StudioSection } from "../components/studio/StudioSection";
 import {
   DEFAULT_TEXT_PRESET,
@@ -28,11 +26,9 @@ import {
   buildVideoProps,
   mergeScenesWithCopy,
 } from "../lib/video/build-video-props";
+import { scriptToRenderConfig } from "../lib/video/apply-generated-script";
 import { generatedArtDirectionToArtDirection } from "../lib/video/art-direction";
-import {
-  generatedAudioDirectionToAudioDirection,
-  shouldEnableAudio,
-} from "../lib/video/audio-direction";
+import { generatedAudioDirectionToAudioDirection } from "../lib/video/audio-direction";
 import type { ArtDirection } from "../remotion/art-direction/catalog";
 import type { AudioDirection } from "../remotion/constants/audio-catalog";
 import { isTextPresetId } from "../remotion/text-presets/catalog";
@@ -84,19 +80,18 @@ export default function PreviewPage() {
 
   const [productDescription, setProductDescription] = useState("");
   const [productContext, setProductContext] = useState("");
-  const [productName, setProductName] = useState("SaasMotion");
-  const [tagline, setTagline] = useState("Cinematic product videos from screenshots");
+  const [productName, setProductName] = useState("Your app");
+  const [tagline, setTagline] = useState("Upload screenshots — we handle the rest");
   const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
   const [exportPhase, setExportPhase] = useState<ExportPhase>("idle");
   const [exportError, setExportError] = useState<string | null>(null);
-  const [enableAudio, setEnableAudio] = useState(false);
 
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  const [presetName, setPresetName] = useState<CameraPresetName>("zelios-style");
+  const [presetName, setPresetName] = useState<CameraPresetName>("apple-style");
   const [frameStyle, setFrameStyle] = useState<FrameStyleId>("window");
   const [aspectRatio, setAspectRatio] =
     useState<VideoAspectRatioId>(DEFAULT_VIDEO_ASPECT_RATIO);
@@ -106,6 +101,8 @@ export default function PreviewPage() {
     useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
   const [artDirection, setArtDirection] = useState<ArtDirection | null>(null);
   const [audioDirection, setAudioDirection] = useState<AudioDirection | null>(null);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const [isRendering, setIsRendering] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -113,6 +110,7 @@ export default function PreviewPage() {
   const [s3VideoUrl, setS3VideoUrl] = useState<string | null>(null);
 
   const blobUrlsRef = useRef<Set<string>>(new Set());
+  const previewGenRef = useRef(0);
 
   const revokeAllBlobUrls = useCallback(() => {
     for (const url of blobUrlsRef.current) URL.revokeObjectURL(url);
@@ -141,6 +139,7 @@ export default function PreviewPage() {
   const handleFilesAdded = useCallback(
     async (files: File[]) => {
       setUploadError(null);
+      setPreviewReady(false);
       const newItems = files.map((file) => {
         const previewUrl = URL.createObjectURL(file);
         blobUrlsRef.current.add(previewUrl);
@@ -170,8 +169,13 @@ export default function PreviewPage() {
       const nextItems = items.filter((_, i) => i !== index);
       setItems(nextItems);
       setSceneCopy((prev) => prev.filter((_, i) => i !== index));
+      setPreviewReady(false);
       if (nextItems.length === 0) {
         setUploadedUrls([]);
+        setProductName("Your app");
+        setTagline("Upload screenshots — we handle the rest");
+        setArtDirection(null);
+        setAudioDirection(null);
         return;
       }
       await uploadItems(nextItems);
@@ -195,7 +199,7 @@ export default function PreviewPage() {
     () =>
       buildVideoProps({
         scenes: mergeScenesWithCopy(previewUrls, effectiveSceneCopy),
-        productName: productName || "Your Product",
+        productName: productName || "Your app",
         tagline,
         presetName,
         durationInFrames,
@@ -209,6 +213,28 @@ export default function PreviewPage() {
       }),
     [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, logoUrl, frameStyle, artDirection, audioDirection],
   );
+
+  const applyScriptToState = useCallback((data: GeneratedVideoScript) => {
+    const directed = generatedArtDirectionToArtDirection(
+      data.artDirection,
+      data.scenes.length,
+    );
+    const audio = generatedAudioDirectionToAudioDirection(data.audioDirection);
+    setProductName(data.productName);
+    setTagline(data.tagline);
+    setSceneCopy([...data.scenes]);
+    setPresetName(directed.cameraPreset);
+    setFrameStyle(directed.frameStyle);
+    setTextPreset(
+      isTextPresetId(directed.textPreset) ? directed.textPreset : DEFAULT_TEXT_PRESET,
+    );
+    setAspectRatio(directed.aspectRatio);
+    setDurationInFrames(directed.durationInFrames);
+    setArtDirection(directed);
+    setAudioDirection(audio);
+    setPreviewReady(true);
+    return { directed, audio };
+  }, []);
 
   const generateScript = useCallback(async () => {
     const urls = uploadedUrls.filter((u): u is string => Boolean(u));
@@ -234,30 +260,43 @@ export default function PreviewPage() {
     });
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      throw new Error(body?.error ?? "Script generation failed");
+      throw new Error(body?.error ?? "Video creation failed");
     }
-    const data = (await res.json()) as {
-      productName: string;
-      tagline: string;
-      scenes: GeneratedSceneCopy[];
-      artDirection: GeneratedVideoScript["artDirection"];
-      audioDirection: GeneratedVideoScript["audioDirection"];
-    };
-    const directed = generatedArtDirectionToArtDirection(data.artDirection);
-    const audio = generatedAudioDirectionToAudioDirection(data.audioDirection);
-    setProductName(data.productName);
-    setTagline(data.tagline);
-    setSceneCopy(data.scenes);
-    setPresetName(directed.cameraPreset);
-    setFrameStyle(directed.frameStyle);
-    setTextPreset(
-      isTextPresetId(directed.textPreset) ? directed.textPreset : DEFAULT_TEXT_PRESET,
-    );
-    setArtDirection(directed);
-    setAudioDirection(audio);
-    setEnableAudio(shouldEnableAudio(audio));
+    const data = (await res.json()) as GeneratedVideoScript;
+    applyScriptToState(data);
     return data;
-  }, [items, productContext, productDescription, uploadedUrls]);
+  }, [applyScriptToState, items, productContext, productDescription, uploadedUrls]);
+
+  const runPreviewGeneration = useCallback(async () => {
+    if (items.length === 0 || isUploading) return;
+    const urls = uploadedUrls.filter((u): u is string => Boolean(u));
+    if (urls.length !== items.length) return;
+
+    const token = ++previewGenRef.current;
+    setIsGeneratingPreview(true);
+    try {
+      await generateScript();
+    } catch {
+      if (token === previewGenRef.current) setPreviewReady(false);
+    } finally {
+      if (token === previewGenRef.current) setIsGeneratingPreview(false);
+    }
+  }, [generateScript, isUploading, items.length, uploadedUrls]);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const timer = setTimeout(() => {
+      void runPreviewGeneration();
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, [
+    items.length,
+    uploadedUrls,
+    isUploading,
+    productDescription,
+    productContext,
+    runPreviewGeneration,
+  ]);
 
   const handleLogoSelected = useCallback(async (file: File) => {
     setLogoError(null);
@@ -379,28 +418,52 @@ export default function PreviewPage() {
     setS3VideoUrl(null);
 
     try {
-      const script = await generateScript();
+      let script: GeneratedVideoScript;
+      if (
+        previewReady &&
+        artDirection &&
+        audioDirection &&
+        sceneCopy.length === items.length
+      ) {
+        script = {
+          productName,
+          tagline,
+          scenes: sceneCopy,
+          artDirection: {
+            reasoning: artDirection.reasoning,
+            cameraPreset: artDirection.cameraPreset,
+            frameStyle: artDirection.frameStyle,
+            textPreset: artDirection.textPreset,
+            aspectRatio: artDirection.aspectRatio,
+            durationInFrames: artDirection.durationInFrames,
+            background: artDirection.background,
+            effects: artDirection.effects,
+            style: artDirection.style,
+            introMotion: artDirection.introMotion,
+          },
+          audioDirection: {
+            reasoning: audioDirection.reasoning,
+            musicStyle: audioDirection.musicStyle,
+            musicVolume: audioDirection.musicVolume,
+            transitionSfx: audioDirection.transitionSfx,
+            sfxVolume: audioDirection.sfxVolume,
+            playIntroRevealSfx: audioDirection.playIntroRevealSfx,
+          },
+        };
+      } else {
+        script = await generateScript();
+      }
+
       setExportPhase("queued");
+
+      const { props } = scriptToRenderConfig(script, urls, {
+        logoUrl: logoUrl ?? undefined,
+      });
 
       const res = await fetch("/api/render/enqueue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          props: buildVideoProps({
-            scenes: mergeScenesWithCopy(urls, script.scenes),
-            productName: script.productName,
-            tagline: script.tagline,
-            presetName,
-            durationInFrames,
-            aspectRatio,
-            textPreset,
-            enableAudio,
-            logoUrl: logoUrl ?? undefined,
-            frameStyle,
-            artDirection: artDirection ?? undefined,
-            audioDirection: audioDirection ?? undefined,
-          }),
-        }),
+        body: JSON.stringify({ props }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
@@ -420,6 +483,14 @@ export default function PreviewPage() {
   const durationSeconds = durationInFrames / 30;
   const isExporting = exportPhase !== "idle" && exportPhase !== "done" && exportPhase !== "failed";
 
+  const statusLine = isGeneratingPreview
+    ? "Designing your video…"
+    : previewReady
+      ? "Ready to create"
+      : items.length > 0
+        ? "Almost there…"
+        : "Add screenshots to start";
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--studio-bg)]">
       <aside className="flex w-[min(100%,380px)] shrink-0 flex-col border-r border-white/6 bg-[var(--studio-panel)]">
@@ -431,10 +502,13 @@ export default function PreviewPage() {
           {tagline && (
             <p className="mt-1 line-clamp-2 text-xs text-zinc-500">{tagline}</p>
           )}
+          <p className="mt-2 text-[10px] uppercase tracking-[0.14em] text-zinc-600">
+            {statusLine}
+          </p>
         </header>
 
         <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">
-          <StudioSection title="Assets" hint={`${items.length}/8`}>
+          <StudioSection title="Screenshots" hint={`${items.length}/8`}>
             <AssetDropzone
               items={items}
               isUploading={isUploading}
@@ -451,88 +525,12 @@ export default function PreviewPage() {
             />
           </StudioSection>
 
-          <StudioSection title="Brief">
+          <StudioSection title="About your product" hint="optional">
             <BriefForm
               description={productDescription}
               contextLoaded={productContext.length > 0}
               onDescriptionChange={setProductDescription}
               onContextLoad={setProductContext}
-            />
-          </StudioSection>
-
-          <StudioSection title="Text">
-            <TextPresetPicker value={textPreset} onChange={setTextPreset} />
-          </StudioSection>
-
-          <StudioSection title="Style">
-            {artDirection && (
-              <div className="mb-4 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-                  AI Art Director
-                </p>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-400">
-                  {artDirection.reasoning}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {[
-                    artDirection.cameraPreset,
-                    artDirection.frameStyle,
-                    artDirection.background,
-                    artDirection.introMotion,
-                    artDirection.effects.glass && "glass",
-                    artDirection.effects.dropShadow && "shadow",
-                    artDirection.effects.backgroundBlur && "blur",
-                    artDirection.style.stroke && "stroke",
-                  ]
-                    .filter(Boolean)
-                    .map((skill) => (
-                      <span
-                        key={String(skill)}
-                        className="rounded-md bg-white/6 px-1.5 py-0.5 text-[10px] text-zinc-300"
-                      >
-                        {String(skill)}
-                      </span>
-                    ))}
-                </div>
-                {audioDirection && (
-                  <>
-                    <p className="mt-3 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-                      AI Sound
-                    </p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">
-                      {audioDirection.reasoning}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {[
-                        audioDirection.musicStyle !== "none" && `music: ${audioDirection.musicStyle}`,
-                        audioDirection.transitionSfx !== "none" && `sfx: ${audioDirection.transitionSfx}`,
-                        audioDirection.playIntroRevealSfx && "intro hit",
-                      ]
-                        .filter(Boolean)
-                        .map((skill) => (
-                          <span
-                            key={String(skill)}
-                            className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-300"
-                          >
-                            {String(skill)}
-                          </span>
-                        ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-            <StyleControls
-              presetName={presetName}
-              aspectRatio={aspectRatio}
-              durationInFrames={durationInFrames}
-              enableAudio={enableAudio}
-              frameStyle={frameStyle}
-              onPresetChange={setPresetName}
-              onAspectRatioChange={setAspectRatio}
-              onDurationChange={setDurationInFrames}
-              onAudioChange={setEnableAudio}
-              onFrameStyleChange={setFrameStyle}
             />
           </StudioSection>
         </div>
@@ -541,14 +539,16 @@ export default function PreviewPage() {
           <button
             type="button"
             onClick={handleRender}
-            disabled={isRendering || isUploading || items.length === 0}
+            disabled={isRendering || isUploading || isGeneratingPreview || items.length === 0}
             className="w-full rounded-xl bg-white py-3 text-sm font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {isExporting
-              ? "Exporting…"
+              ? "Creating your video…"
               : isUploading
                 ? "Uploading…"
-                : "Export video"}
+                : isGeneratingPreview
+                  ? "Designing preview…"
+                  : "Create video"}
           </button>
         </footer>
       </aside>
@@ -568,7 +568,7 @@ export default function PreviewPage() {
             setJobStatus(null);
           }}
         />
-        <div className={`overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-opacity ${isExporting ? "opacity-30" : ""}`}>
+        <div className={`overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-opacity ${isExporting || isGeneratingPreview ? "opacity-30" : ""}`}>
           <Player
             component={ScreenshotVideo}
             inputProps={playerInputProps}
@@ -587,6 +587,13 @@ export default function PreviewPage() {
             acknowledgeRemotionLicense
           />
         </div>
+        {isGeneratingPreview && items.length > 0 && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <p className="rounded-full bg-black/70 px-4 py-2 text-sm text-zinc-200 backdrop-blur-sm">
+              AI is styling your preview…
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -1,9 +1,12 @@
 import type { GeneratedArtDirection } from "../../types/video-script";
-import type { BackgroundStyleId } from "../../remotion/art-direction/catalog";
+import type { BackgroundStyleId, VideoAspectRatioId, VideoDurationFrames } from "../../remotion/art-direction/catalog";
 import {
   artDirectionToPanelStyle,
   BACKGROUND_CSS,
   DEFAULT_ART_DIRECTION,
+  inferDurationFromSceneCount,
+  VIDEO_ASPECT_RATIO_IDS,
+  VIDEO_DURATION_FRAME_OPTIONS,
   type ArtDirection,
 } from "../../remotion/art-direction/catalog";
 import type { TextPresetId } from "../../remotion/text-presets/catalog";
@@ -12,7 +15,20 @@ import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video
 
 export function generatedArtDirectionToArtDirection(
   generated: GeneratedArtDirection,
+  sceneCount = 1,
 ): ArtDirection {
+  const aspectRatio = VIDEO_ASPECT_RATIO_IDS.includes(
+    generated.aspectRatio as VideoAspectRatioId,
+  )
+    ? (generated.aspectRatio as VideoAspectRatioId)
+    : DEFAULT_ART_DIRECTION.aspectRatio;
+
+  const durationInFrames = VIDEO_DURATION_FRAME_OPTIONS.includes(
+    generated.durationInFrames as VideoDurationFrames,
+  )
+    ? (generated.durationInFrames as VideoDurationFrames)
+    : inferDurationFromSceneCount(sceneCount);
+
   return {
     reasoning: generated.reasoning,
     cameraPreset: generated.cameraPreset,
@@ -20,6 +36,8 @@ export function generatedArtDirectionToArtDirection(
     textPreset: isTextPresetId(generated.textPreset)
       ? generated.textPreset
       : DEFAULT_ART_DIRECTION.textPreset,
+    aspectRatio,
+    durationInFrames,
     background: generated.background,
     effects: generated.effects,
     style: generated.style,

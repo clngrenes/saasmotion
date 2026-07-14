@@ -34,7 +34,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
         rows={3}
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
-        placeholder="What does your product do? (optional — AI uses .env/README too)"
+        placeholder="What does your app do? Who is it for? (optional)"
         className="w-full resize-none rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-white/20 focus:outline-none"
       />
 
@@ -46,7 +46,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
         }}
         className="self-start rounded-lg border border-white/8 px-3 py-1.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:border-white/15 hover:text-zinc-200"
       >
-        {contextLoaded ? "Context loaded" : "Add .env / README"}
+        {contextLoaded ? "Product info added" : "Add README or .env"}
       </button>
 
       <input
@@ -74,8 +74,8 @@ export const BriefForm: React.FC<BriefFormProps> = ({
       />
 
       <p className="text-[10px] text-zinc-600">
-        Script is written by AI when you export. macOS:{" "}
-        <kbd className="rounded bg-white/5 px-1">⌘⇧.</kbd> to show .env files.
+        We read this when designing your video. macOS:{" "}
+        <kbd className="rounded bg-white/5 px-1">⌘⇧.</kbd> to show hidden files.
       </p>
 
       {contextTrimmed && (

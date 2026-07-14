@@ -20,11 +20,11 @@ function estimateSeconds(sceneCount: number, durationSeconds: number): number {
 }
 
 function phaseLabel(phase: ExportPhase, jobStatus: RenderStatus | null): string {
-  if (phase === "script") return "AI is writing your script…";
-  if (phase === "queued" || jobStatus === "queued") return "Job queued — waiting for render worker…";
-  if (phase === "rendering" || jobStatus === "rendering") return "Rendering cinematic video…";
+  if (phase === "script") return "Writing your story and styling the video…";
+  if (phase === "queued" || jobStatus === "queued") return "Queued — starting render…";
+  if (phase === "rendering" || jobStatus === "rendering") return "Rendering your video…";
   if (phase === "done") return "Your video is ready";
-  if (phase === "failed") return "Export failed";
+  if (phase === "failed") return "Something went wrong";
   return "";
 }
 
