@@ -21,6 +21,7 @@ export type GenerateScriptRequest = {
   readonly productDescription: string;
   readonly productContext?: string;
   readonly screenshotNames: readonly string[];
+  readonly screenshotUrls?: readonly string[];
 };
 
 export type GenerateScriptResponse = GeneratedVideoScript;

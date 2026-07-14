@@ -16,6 +16,7 @@ export const screenshotVideoSchema = z.object({
   backgroundMusicUrl: z.string().url(),
   transitionSfxUrl: z.string().url(),
   enableAudio: z.boolean(),
+  logoUrl: z.string().url().optional(),
 });
 
 export type ScreenshotVideoSchema = z.infer<typeof screenshotVideoSchema>;

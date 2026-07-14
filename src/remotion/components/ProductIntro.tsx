@@ -1,15 +1,17 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
 import { INTRO_DURATION_FRAMES } from "../constants/media";
 
 interface ProductIntroProps {
   readonly productName: string;
   readonly tagline: string;
+  readonly logoUrl?: string;
 }
 
 export const ProductIntro: React.FC<ProductIntroProps> = ({
   productName,
   tagline,
+  logoUrl,
 }) => {
   const frame = useCurrentFrame();
 
@@ -40,6 +42,18 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({
       }}
     >
       <div style={{ transform: `scale(${scale})`, textAlign: "center", padding: 48 }}>
+        {logoUrl && (
+          <Img
+            src={logoUrl}
+            style={{
+              width: 96,
+              height: 96,
+              objectFit: "contain",
+              margin: "0 auto 28px",
+              display: "block",
+            }}
+          />
+        )}
         <p
           style={{
             margin: 0,

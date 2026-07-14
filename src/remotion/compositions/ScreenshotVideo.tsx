@@ -28,6 +28,7 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   backgroundMusicUrl,
   transitionSfxUrl,
   enableAudio,
+  logoUrl,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -70,7 +71,7 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
       />
 
       <Sequence from={0} durationInFrames={INTRO_DURATION_FRAMES}>
-        <ProductIntro productName={productName} tagline={tagline} />
+        <ProductIntro productName={productName} tagline={tagline} logoUrl={logoUrl} />
       </Sequence>
 
       {!showIntro && (

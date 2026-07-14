@@ -27,6 +27,7 @@
     "react-dom": "19.2.4",
     "remotion": "^4.0.489",
     "three": "^0.185.1",
+    "ws": "^8.21.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -35,6 +36,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.185.1",
+    "@types/ws": "^8.18.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5",

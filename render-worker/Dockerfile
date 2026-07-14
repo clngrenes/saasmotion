@@ -1,4 +1,4 @@
-FROM node:20-bookworm
+FROM node:22-bookworm
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN npx remotion browser ensure
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV RENDER_WORKER_PORT=3100
-ENV RENDER_CONCURRENCY=1
+ENV RENDER_CONCURRENCY=2
 
 EXPOSE 3100
 

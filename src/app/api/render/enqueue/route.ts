@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { inngest } from "../../../../lib/inngest/client";
+import { dispatchRenderWorker } from "../../../../lib/render/dispatch-render-worker";
 import { getServiceSupabase } from "../../../../lib/supabase/server";
 import { screenshotVideoSchema } from "../../../../remotion/schemas/screenshot-video-schema";
 import type { EnqueueRenderRequest, EnqueueRenderResponse } from "../../../../types/render-job";
@@ -34,32 +34,41 @@ export async function POST(request: Request) {
       throw new Error(`Supabase insert failed: ${insertError?.message}`);
     }
 
-    console.log(`[Enqueue] Created render job ${job.id}`);
-
-    try {
-      await inngest.send({
-        name: "saasmotion/render.requested",
-        data: {
-          jobId: job.id,
-          props,
-        },
-      });
-      console.log(`[Inngest] Enqueued render for job ${job.id}`);
-    } catch (inngestError) {
-      console.error("[Inngest] Failed to enqueue:", inngestError);
+    const workerUrl = process.env.RENDER_WORKER_URL;
+    if (!workerUrl) {
       await supabase
         .from("render_jobs")
         .update({
           status: "failed",
-          error_details: "Failed to enqueue render job",
+          error_details: "RENDER_WORKER_URL fehlt auf Vercel",
         })
         .eq("id", job.id);
-      throw inngestError;
+      return NextResponse.json(
+        { error: "Render worker not configured" },
+        { status: 503 },
+      );
+    }
+
+    await supabase
+      .from("render_jobs")
+      .update({ status: "rendering" })
+      .eq("id", job.id);
+
+    try {
+      await dispatchRenderWorker(job.id, props);
+    } catch (workerError: unknown) {
+      const message =
+        workerError instanceof Error ? workerError.message : "Worker dispatch failed";
+      await supabase
+        .from("render_jobs")
+        .update({ status: "failed", error_details: message })
+        .eq("id", job.id);
+      throw workerError;
     }
 
     const response: EnqueueRenderResponse = {
       jobId: job.id,
-      status: "queued",
+      status: "rendering",
     };
 
     return NextResponse.json(response, { status: 200 });

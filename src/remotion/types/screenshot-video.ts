@@ -57,6 +57,7 @@ export type ScreenshotVideoProps = {
   readonly backgroundMusicUrl: string;
   readonly transitionSfxUrl: string;
   readonly enableAudio: boolean;
+  readonly logoUrl?: string;
 };
 
 /** Device-Frame Geometrie-Konstanten (Option B Default) */

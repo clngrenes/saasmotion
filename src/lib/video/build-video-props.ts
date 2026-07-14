@@ -46,6 +46,7 @@ export function buildVideoProps(input: {
   enableAudio?: boolean;
   backgroundMusicUrl?: string;
   transitionSfxUrl?: string;
+  logoUrl?: string;
 }): ScreenshotVideoProps {
   return {
     scenes: input.scenes,
@@ -56,5 +57,6 @@ export function buildVideoProps(input: {
     enableAudio: input.enableAudio ?? true,
     backgroundMusicUrl: input.backgroundMusicUrl ?? DEFAULT_BACKGROUND_MUSIC_URL,
     transitionSfxUrl: input.transitionSfxUrl ?? DEFAULT_TRANSITION_SFX_URL,
+    logoUrl: input.logoUrl,
   };
 }

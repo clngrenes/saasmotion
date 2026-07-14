@@ -4,7 +4,8 @@ import { Player } from "@remotion/player";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AssetDropzone } from "../components/studio/AssetDropzone";
 import { BriefForm } from "../components/studio/BriefForm";
-import { SceneList } from "../components/studio/SceneList";
+import { ExportProgressPanel, type ExportPhase } from "../components/studio/ExportProgressPanel";
+import { LogoDropzone } from "../components/studio/LogoDropzone";
 import { StyleControls } from "../components/studio/StyleControls";
 import { StudioSection } from "../components/studio/StudioSection";
 import {
@@ -26,6 +27,21 @@ import type { GeneratedSceneCopy } from "../types/video-script";
 const DEFAULT_PREVIEW_URLS = [
   "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
 ];
+
+async function uploadLogo(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch("/api/upload/logo", {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? "Logo upload failed");
+  }
+  const data = (await response.json()) as { url: string };
+  return data.url;
+}
 
 async function uploadScreenshot(file: File): Promise<string> {
   const formData = new FormData();
@@ -53,9 +69,14 @@ export default function PreviewPage() {
   const [productName, setProductName] = useState("SaaMotion");
   const [tagline, setTagline] = useState("Cinematic product videos from screenshots");
   const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [exportPhase, setExportPhase] = useState<ExportPhase>("idle");
+  const [exportError, setExportError] = useState<string | null>(null);
   const [enableAudio, setEnableAudio] = useState(true);
+
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const [presetName, setPresetName] = useState<CameraPresetName>("zelios-style");
   const [durationInFrames, setDurationInFrames] =
@@ -149,41 +170,75 @@ export default function PreviewPage() {
         presetName,
         durationInFrames,
         enableAudio,
+        logoUrl: logoUrl ?? undefined,
       }),
-    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, enableAudio],
+    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, enableAudio, logoUrl],
   );
 
-  const handleGenerateScript = async () => {
-    setIsGenerating(true);
-    setGenerateError(null);
-    try {
-      const res = await fetch("/api/generate/script", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productDescription,
-          productContext: productContext || undefined,
-          screenshotNames: items.map((i) => i.file.name),
-        }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? "Generation failed");
-      }
-      const data = (await res.json()) as {
-        productName: string;
-        tagline: string;
-        scenes: GeneratedSceneCopy[];
-      };
-      setProductName(data.productName);
-      setTagline(data.tagline);
-      setSceneCopy(data.scenes);
-    } catch (error: unknown) {
-      setGenerateError(error instanceof Error ? error.message : "Generation failed");
-    } finally {
-      setIsGenerating(false);
+  const generateScript = useCallback(async () => {
+    const urls = uploadedUrls.filter((u): u is string => Boolean(u));
+    if (urls.length !== items.length) {
+      throw new Error("Screenshots are still uploading");
     }
-  };
+
+    const description =
+      productDescription.trim() ||
+      (productContext
+        ? "SaaS product — use the attached product context."
+        : "Cinematic product demo from uploaded app screenshots.");
+
+    const res = await fetch("/api/generate/script", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productDescription: description,
+        productContext: productContext || undefined,
+        screenshotNames: items.map((i) => i.file.name),
+        screenshotUrls: urls,
+      }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(body?.error ?? "Script generation failed");
+    }
+    const data = (await res.json()) as {
+      productName: string;
+      tagline: string;
+      scenes: GeneratedSceneCopy[];
+    };
+    setProductName(data.productName);
+    setTagline(data.tagline);
+    setSceneCopy(data.scenes);
+    return data;
+  }, [items, productContext, productDescription, uploadedUrls]);
+
+  const handleLogoSelected = useCallback(async (file: File) => {
+    setLogoError(null);
+    if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl);
+    const preview = URL.createObjectURL(file);
+    blobUrlsRef.current.add(preview);
+    setLogoPreviewUrl(preview);
+    setIsUploadingLogo(true);
+    try {
+      const url = await uploadLogo(file);
+      setLogoUrl(url);
+    } catch (error: unknown) {
+      setLogoError(error instanceof Error ? error.message : "Logo upload failed");
+      setLogoUrl(null);
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }, [logoPreviewUrl]);
+
+  const handleLogoRemove = useCallback(() => {
+    if (logoPreviewUrl) {
+      URL.revokeObjectURL(logoPreviewUrl);
+      blobUrlsRef.current.delete(logoPreviewUrl);
+    }
+    setLogoPreviewUrl(null);
+    setLogoUrl(null);
+    setLogoError(null);
+  }, [logoPreviewUrl]);
 
   useEffect(() => {
     if (!jobId) return;
@@ -201,18 +256,55 @@ export default function PreviewPage() {
         (payload) => {
           const status = payload.new.status as RenderStatus;
           setJobStatus(status);
+          if (status === "rendering") setExportPhase("rendering");
           if (status === "done" && payload.new.s3_video_url) {
             setS3VideoUrl(payload.new.s3_video_url);
             setIsRendering(false);
+            setExportPhase("done");
           } else if (status === "failed") {
-            alert(payload.new.error_details ?? "Render failed");
+            setExportError(String(payload.new.error_details ?? "Render failed"));
             setIsRendering(false);
+            setExportPhase("failed");
           }
         },
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [jobId]);
+
+  useEffect(() => {
+    if (!jobId || exportPhase === "done" || exportPhase === "failed") return;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/render/status?jobId=${jobId}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          status: RenderStatus;
+          videoUrl?: string;
+          errorDetails?: string;
+        };
+        setJobStatus(data.status);
+        if (data.status === "rendering") setExportPhase("rendering");
+        if (data.status === "done" && data.videoUrl) {
+          setS3VideoUrl(data.videoUrl);
+          setExportPhase("done");
+          setIsRendering(false);
+        }
+        if (data.status === "failed") {
+          setExportError(data.errorDetails ?? "Render failed");
+          setExportPhase("failed");
+          setIsRendering(false);
+        }
+      } catch {
+        // ignore transient poll errors
+      }
+    };
+
+    void poll();
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [jobId, exportPhase]);
 
   const handleRender = async () => {
     if (!items.length || isUploading) return;
@@ -233,22 +325,28 @@ export default function PreviewPage() {
     }
 
     setIsRendering(true);
+    setExportPhase("script");
+    setExportError(null);
     setJobId(null);
-    setJobStatus("queued");
+    setJobStatus(null);
     setS3VideoUrl(null);
 
     try {
+      const script = await generateScript();
+      setExportPhase("queued");
+
       const res = await fetch("/api/render/enqueue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           props: buildVideoProps({
-            scenes: mergeScenesWithCopy(urls, effectiveSceneCopy),
-            productName: productName || "Your Product",
-            tagline,
+            scenes: mergeScenesWithCopy(urls, script.scenes),
+            productName: script.productName,
+            tagline: script.tagline,
             presetName,
             durationInFrames,
             enableAudio,
+            logoUrl: logoUrl ?? undefined,
           }),
         }),
       });
@@ -259,11 +357,16 @@ export default function PreviewPage() {
       const data = await res.json();
       setJobId(data.jobId);
       setJobStatus(data.status);
+      setExportPhase("rendering");
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "Export failed");
+      setExportError(error instanceof Error ? error.message : "Export failed");
+      setExportPhase("failed");
       setIsRendering(false);
     }
   };
+
+  const durationSeconds = durationInFrames / 30;
+  const isExporting = exportPhase !== "idle" && exportPhase !== "done" && exportPhase !== "failed";
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--studio-bg)]">
@@ -287,33 +390,23 @@ export default function PreviewPage() {
               onFilesAdded={handleFilesAdded}
               onRemove={handleRemove}
             />
+            <LogoDropzone
+              previewUrl={logoPreviewUrl}
+              isUploading={isUploadingLogo}
+              error={logoError}
+              onFileSelected={handleLogoSelected}
+              onRemove={handleLogoRemove}
+            />
           </StudioSection>
 
           <StudioSection title="Brief">
             <BriefForm
               description={productDescription}
               contextLoaded={productContext.length > 0}
-              isGenerating={isGenerating}
-              error={generateError}
-              disabled={items.length === 0}
               onDescriptionChange={setProductDescription}
               onContextLoad={setProductContext}
-              onGenerate={handleGenerateScript}
             />
           </StudioSection>
-
-          {effectiveSceneCopy.length > 0 && items.length > 0 && (
-            <StudioSection title="Script">
-              <SceneList scenes={effectiveSceneCopy} onChange={(index, field, value) => {
-                setSceneCopy((prev) => {
-                  const next = [...prev];
-                  const current = next[index] ?? buildDefaultSceneCopy(index, prev.length);
-                  next[index] = { ...current, [field]: value };
-                  return next;
-                });
-              }} />
-            </StudioSection>
-          )}
 
           <StudioSection title="Style">
             <StyleControls
@@ -334,24 +427,31 @@ export default function PreviewPage() {
             disabled={isRendering || isUploading || items.length === 0}
             className="w-full rounded-xl bg-white py-3 text-sm font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {isRendering ? "Exporting…" : isUploading ? "Uploading…" : "Export video"}
+            {isExporting
+              ? "Exporting…"
+              : isUploading
+                ? "Uploading…"
+                : "Export video"}
           </button>
-
-          {jobId && (
-            <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
-              <span className="capitalize">{jobStatus}</span>
-              {s3VideoUrl && (
-                <a href={s3VideoUrl} target="_blank" rel="noopener noreferrer" className="text-white underline-offset-2 hover:underline">
-                  Download
-                </a>
-              )}
-            </div>
-          )}
         </footer>
       </aside>
 
       <main className="relative flex flex-1 items-center justify-center bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.04)_0%,_transparent_55%)] p-10">
-        <div className="overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10">
+        <ExportProgressPanel
+          phase={exportPhase}
+          jobStatus={jobStatus}
+          sceneCount={items.length}
+          durationSeconds={durationSeconds}
+          videoUrl={s3VideoUrl}
+          errorMessage={exportError}
+          onReset={() => {
+            setExportPhase("idle");
+            setExportError(null);
+            setJobId(null);
+            setJobStatus(null);
+          }}
+        />
+        <div className={`overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-opacity ${isExporting ? "opacity-30" : ""}`}>
           <Player
             component={ScreenshotVideo}
             inputProps={playerInputProps}
