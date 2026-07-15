@@ -141,6 +141,7 @@ ${input.requestedAspectRatio ? `- USER REQUESTED ASPECT RATIO: MUST USE "${input
 - durationInFrames: match screenshot count — 1–2 screens → "900", 3–4 → "1800", 5–6 → "2700", 7+ → "3600" (string values)
 ${input.requestedDuration ? `- USER REQUESTED DURATION: MUST USE "${input.requestedDuration}". If duration is long (e.g. 1800+) but screenshot count is low, write rich, engaging, multi-part story copy to fill the time!` : ""}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
+- ALWAYS prefer "linear-style" for cameraPreset unless it's a very simple mobile app. Linear-style provides the best whip-zoom motion.
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
 - Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)

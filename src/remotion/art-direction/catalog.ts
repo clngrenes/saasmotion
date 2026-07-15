@@ -158,7 +158,7 @@ You are also the motion art director. Pick the best visual skills for this produ
 ${MOTION_DIRECTOR_SKILL_GUIDE}
 
 TRANSFORM (camera / motion):
-- linear-style (Whip Zoom): fast snap zoom directly into the highlighted element, extreme easing — ultra-premium "Linear" or "Vercel" launch style
+- linear-style (Whip Zoom): fast snap zoom directly into the highlighted element, extreme easing — ALWAYS USE THIS for desktop or high-end products. It is the absolute best.
 - zelios-style (Dolly): slow push-in, subtle Y swing — enterprise, calm, trustworthy
 - apple-style (3D Orbit): smooth isometric X+Y rotation — premium product demos (OpenAI style)
 - minimal-flat (Slide): flat slide-up, no rotation — playful, simple, mobile-first apps
@@ -209,9 +209,9 @@ LENGTH (durationInFrames — pick based on screenshot count + story depth):
 - 2700 (90s): 5–6 screens, feature tour
 - 3600 (120s): 7+ screens or deep workflow story
 
-Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9 + blur-fade throughout.
+Choose ONE coherent direction. Enterprise B2B → window + linear-style + dark-gradient + dropShadow + 16:9 + blur-fade throughout.
 Mobile consumer → phone + slide + grow + 9:16 + blur-scale logo + slide-up transitions.
-AI/futuristic → window + linear-style snap zooms + cinematic-space + glass + dark logo intro + blur-slide-up.
+AI/futuristic → window + linear-style + cinematic-space + glass + dark logo intro + blur-slide-up.
 
 ${SCENE_TRANSITION_SKILL_GUIDE}
 

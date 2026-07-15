@@ -103,7 +103,6 @@ export default function PreviewPage() {
   const [artDirection, setArtDirection] = useState<ArtDirection | null>(null);
   const [audioDirection, setAudioDirection] = useState<AudioDirection | null>(null);
   const [previewReady, setPreviewReady] = useState(false);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
 
   const [isRendering, setIsRendering] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -111,7 +110,6 @@ export default function PreviewPage() {
   const [s3VideoUrl, setS3VideoUrl] = useState<string | null>(null);
 
   const blobUrlsRef = useRef<Set<string>>(new Set());
-  const previewGenRef = useRef(0);
 
   const revokeAllBlobUrls = useCallback(() => {
     for (const url of blobUrlsRef.current) URL.revokeObjectURL(url);
@@ -280,37 +278,6 @@ export default function PreviewPage() {
     return data;
   }, [applyScriptToState, items, productContext, productDescription, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
 
-  const runPreviewGeneration = useCallback(async () => {
-    if (items.length === 0 || isUploading) return;
-    const urls = uploadedUrls.filter((u): u is string => Boolean(u));
-    if (urls.length !== items.length) return;
-
-    const token = ++previewGenRef.current;
-    setIsGeneratingPreview(true);
-    try {
-      await generateScript();
-    } catch {
-      if (token === previewGenRef.current) setPreviewReady(false);
-    } finally {
-      if (token === previewGenRef.current) setIsGeneratingPreview(false);
-    }
-  }, [generateScript, isUploading, items.length, uploadedUrls]);
-
-  useEffect(() => {
-    if (items.length === 0) return;
-    const timer = setTimeout(() => {
-      void runPreviewGeneration();
-    }, 1400);
-    return () => clearTimeout(timer);
-  }, [
-    items.length,
-    uploadedUrls,
-    isUploading,
-    productDescription,
-    productContext,
-    runPreviewGeneration,
-  ]);
-
   const handleLogoSelected = useCallback(async (file: File) => {
     setLogoError(null);
     if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl);
@@ -321,6 +288,7 @@ export default function PreviewPage() {
     try {
       const url = await uploadLogo(file);
       setLogoUrl(url);
+      setPreviewReady(false);
     } catch (error: unknown) {
       setLogoError(error instanceof Error ? error.message : "Logo upload failed");
       setLogoUrl(null);
@@ -337,6 +305,7 @@ export default function PreviewPage() {
     setLogoPreviewUrl(null);
     setLogoUrl(null);
     setLogoError(null);
+    setPreviewReady(false);
   }, [logoPreviewUrl]);
 
   useEffect(() => {
@@ -501,12 +470,12 @@ export default function PreviewPage() {
   const durationSeconds = durationInFrames / 30;
   const isExporting = exportPhase !== "idle" && exportPhase !== "done" && exportPhase !== "failed";
 
-  const statusLine = isGeneratingPreview
-    ? "Designing your video…"
+  const statusLine = isExporting && exportPhase === "script"
+    ? "Writing your script…"
     : previewReady
       ? "Ready to create"
       : items.length > 0
-        ? "Almost there…"
+        ? "Click Create video when ready"
         : "Add screenshots to start";
 
   return (
@@ -562,8 +531,14 @@ export default function PreviewPage() {
             <BriefForm
               description={productDescription}
               contextLoaded={productContext.length > 0}
-              onDescriptionChange={setProductDescription}
-              onContextLoad={setProductContext}
+              onDescriptionChange={(value) => {
+                setProductDescription(value);
+                setPreviewReady(false);
+              }}
+              onContextLoad={(value) => {
+                setProductContext(value);
+                setPreviewReady(false);
+              }}
             />
           </StudioSection>
         </div>
@@ -572,16 +547,16 @@ export default function PreviewPage() {
           <button
             type="button"
             onClick={handleRender}
-            disabled={isRendering || isUploading || isGeneratingPreview || items.length === 0}
+            disabled={isRendering || isUploading || items.length === 0}
             className="w-full rounded-xl bg-white py-3 text-sm font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {isExporting
-              ? "Creating your video…"
+              ? exportPhase === "script"
+                ? "Writing script…"
+                : "Creating your video…"
               : isUploading
                 ? "Uploading…"
-                : isGeneratingPreview
-                  ? "Designing preview…"
-                  : "Create video"}
+                : "Create video"}
           </button>
         </footer>
       </aside>
@@ -601,7 +576,7 @@ export default function PreviewPage() {
             setJobStatus(null);
           }}
         />
-        <div className={`overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-opacity ${isExporting || isGeneratingPreview ? "opacity-30" : ""}`}>
+        <div className={`overflow-hidden rounded-[1.75rem] shadow-[0_40px_120px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-opacity ${isExporting ? "opacity-30" : ""}`}>
           <Player
             component={ScreenshotVideo}
             inputProps={playerInputProps}
@@ -620,13 +595,6 @@ export default function PreviewPage() {
             acknowledgeRemotionLicense
           />
         </div>
-        {isGeneratingPreview && items.length > 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p className="rounded-full bg-black/70 px-4 py-2 text-sm text-zinc-200 backdrop-blur-sm">
-              AI is styling your preview…
-            </p>
-          </div>
-        )}
       </main>
     </div>
   );
