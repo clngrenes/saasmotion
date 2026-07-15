@@ -39,6 +39,8 @@ export function computeTextEnter(
   };
 
   switch (preset) {
+    case "static":
+      return base;
     case "fade":
       return { ...base, opacity: t };
     case "blur-in":

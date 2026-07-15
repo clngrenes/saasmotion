@@ -168,13 +168,9 @@ FRAME:
 - window: desktop/web UI floating panel — SaaS dashboards, web apps (default for desktop screenshots)
 - phone: device frame — mobile apps, iOS/Android screenshots
 
-TEXT ANIMATION:
-- kinetic-timeline: Process visualization. AI MUST use '|' in subline to separate 2-3 steps (e.g. 'Login | Scan | Export'). Headline acts as typing narration.
-- kinetic-pills / kinetic-words / kinetic-chat: high-end "Aside/Linear" motion. Words stagger in sequentially. Chat is for conversational tools.
-- slide-up / slide-down / slide-left / slide-right: confident product reveals
-- fade / blur-in: subtle, editorial, minimal
-- mask-up / mask-down: bold, Jitter-style editorial
-- grow / shrink: energetic, consumer, launch energy
+TEXT:
+- ALWAYS use textPreset "static" — headlines and sublines are shown fixed on screen with no entrance, exit, or kinetic animation (Linear/Apple SaaS style)
+- Typography uses Inter — clean, modern, premium SaaS product video standard
 
 BACKGROUND:
 - dark-gradient: safe default, cinematic SaaS

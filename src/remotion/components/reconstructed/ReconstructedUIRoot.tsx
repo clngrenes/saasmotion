@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import type { UIElement } from "../../../types/ui-reconstruction";
+import { SAAS_FONT_FAMILY } from "../../constants/typography";
 
 interface ReconstructedUIRootProps {
   readonly element: UIElement;
@@ -54,7 +55,7 @@ function elementStyle(
     filter: dofBlur > 0 ? `blur(${dofBlur}px)` : undefined,
     zIndex: isFocused ? 10 : element.type === "card" ? 2 : 1,
     transition: "none",
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+    fontFamily: SAAS_FONT_FAMILY,
     lineHeight: 1.2,
     padding: element.type === "text" ? "2px 4px" : undefined,
     whiteSpace: element.type === "text" ? "pre-wrap" : undefined,
