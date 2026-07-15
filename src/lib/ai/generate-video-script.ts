@@ -79,6 +79,8 @@ type ScriptSchemaOutput = z.infer<typeof scriptSchema>;
 function toGeneratedVideoScript(
   object: ScriptSchemaOutput,
   sceneCount: number,
+  requestedDuration?: number,
+  requestedAspectRatio?: string,
 ): GeneratedVideoScript {
   return {
     productName: object.productName,
@@ -87,9 +89,10 @@ function toGeneratedVideoScript(
     artDirection: {
       ...object.artDirection,
       durationInFrames: parseDurationInFrames(
-        object.artDirection.durationInFrames,
+        requestedDuration ?? object.artDirection.durationInFrames,
         sceneCount,
       ),
+      aspectRatio: (requestedAspectRatio as any) ?? object.artDirection.aspectRatio,
     },
     audioDirection: object.audioDirection,
   };
@@ -129,10 +132,8 @@ COPY RULES:
 
 ART DIRECTION RULES:
 - Pick ONE coherent visual direction for the whole video — the founder will not adjust anything
-- aspectRatio: infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)
-${input.requestedAspectRatio ? `- USER REQUESTED ASPECT RATIO: MUST USE "${input.requestedAspectRatio}"` : ""}
-- durationInFrames: match screenshot count — 1–2 screens → "900", 3–4 → "1800", 5–6 → "2700", 7+ → "3600" (string values)
-${input.requestedDuration ? `- USER REQUESTED DURATION: MUST USE "${input.requestedDuration}". If duration is long (e.g. 1800+) but screenshot count is low, write rich, engaging, multi-part story copy to fill the time!` : ""}
+- aspectRatio: ${input.requestedAspectRatio ? `MUST USE "${input.requestedAspectRatio}"` : "infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)"}
+- durationInFrames: ${input.requestedDuration ? `MUST USE "${input.requestedDuration}". Since the user locked this duration, if it's long (e.g. 1800+) but screenshot count is low, you MUST write rich, engaging, multi-part story copy to fill the time!` : "match screenshot count — 1–2 screens → \"900\", 3–4 → \"1800\", 5–6 → \"2700\", 7+ → \"3600\" (string values)"}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - ALWAYS prefer "linear-style" for cameraPreset unless it's a very simple mobile app. Linear-style provides the best whip-zoom motion.
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
@@ -220,8 +221,10 @@ export async function generateVideoScript(input: {
     return toGeneratedVideoScript(
       { ...object, scenes: scenes.slice(0, sceneCount) },
       sceneCount,
+      input.requestedDuration,
+      input.requestedAspectRatio,
     );
   }
 
-  return toGeneratedVideoScript(object, sceneCount);
+  return toGeneratedVideoScript(object, sceneCount, input.requestedDuration, input.requestedAspectRatio);
 }
