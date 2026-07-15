@@ -36,6 +36,14 @@ const scriptSchema = z.object({
     z.object({
       headline: z.string().min(1).max(100),
       subline: z.string().max(180),
+      highlightBox: z
+        .object({
+          x: z.number().min(0).max(100),
+          y: z.number().min(0).max(100),
+          width: z.number().min(0).max(100),
+          height: z.number().min(0).max(100),
+        })
+        .optional(),
     }),
   ),
   artDirection: z.object({
@@ -117,6 +125,7 @@ ${input.hasVision ? "You can SEE each screenshot image below — study the UI ca
 COPY RULES:
 - Exactly ${sceneCount} scenes — one per screenshot, in upload order
 - Each headline/subline MUST match what is visible on that specific screenshot
+- IMPORTANT: If you can SEE the screenshots (hasVision is true), identify the single most prominent UI element (a modal, a floating card, or a central panel) and return its \`highlightBox\` coordinates in PERCENTAGES (0 to 100). x/y is top-left. E.g. x: 25, y: 25, width: 50, height: 50. If there is no clear prominent element to lift, omit highlightBox.
 - Cross-check with product context (.env/README) — do not contradict the product
 - Do not invent features, screens, or data that are not visible or documented
 - Headlines: short, benefit-driven

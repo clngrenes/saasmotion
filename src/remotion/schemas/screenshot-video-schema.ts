@@ -35,6 +35,14 @@ export const videoSceneSchema = z.object({
   screenshotUrl: z.string().url(),
   headline: z.string().min(1).max(120),
   subline: z.string().max(200),
+  highlightBox: z
+    .object({
+      x: z.number().min(0).max(100),
+      y: z.number().min(0).max(100),
+      width: z.number().min(0).max(100),
+      height: z.number().min(0).max(100),
+    })
+    .optional(),
 });
 
 export const screenshotVideoSchema = z.object({

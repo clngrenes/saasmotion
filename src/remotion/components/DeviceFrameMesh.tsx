@@ -3,6 +3,8 @@ import React, { useMemo } from "react";
 import * as THREE from "three";
 import { computeScreenInlay, DEVICE_FRAME, toMutableTuple } from "../presets";
 import type { Vec3 } from "../types/screenshot-video";
+import type { BoundingBox } from "../../types/video-script";
+import { UIHighlightLayer } from "./UIHighlightLayer";
 
 /** Dunkles, leicht metallisches Gehäuse */
 const BODY_COLOR = "#0e0e11";
@@ -36,12 +38,14 @@ interface DeviceFrameMeshProps {
   readonly screenshotUrl: string;
   readonly position: Vec3;
   readonly rotation: Vec3;
+  readonly highlightBox?: BoundingBox;
 }
 
 export const DeviceFrameMesh: React.FC<DeviceFrameMeshProps> = ({
   screenshotUrl,
   position,
   rotation,
+  highlightBox,
 }) => {
   // Suspendet bis die Textur geladen ist; von <SuspenseLoader> abgefangen.
   const texture = useTexture(screenshotUrl);
@@ -89,6 +93,17 @@ export const DeviceFrameMesh: React.FC<DeviceFrameMeshProps> = ({
         <planeGeometry args={[inlay.width, inlay.height]} />
         <meshBasicMaterial map={screenTexture} toneMapped={false} />
       </mesh>
+
+      {/* Sliced 3D Highlight Layer */}
+      {highlightBox && (
+        <group position={[0, 0, SCREEN_Z_OFFSET]}>
+          <UIHighlightLayer
+            textureUrl={screenshotUrl}
+            highlightBox={highlightBox}
+            inlay={inlay}
+          />
+        </group>
+      )}
     </group>
   );
 };

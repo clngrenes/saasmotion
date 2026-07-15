@@ -96,12 +96,14 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
               rotation={mesh.rotation}
               panelStyle={panelStyle}
               opacity={meshOpacity}
+              highlightBox={scene.highlightBox}
             />
           ) : (
             <DeviceFrameMesh
               screenshotUrl={scene.screenshotUrl}
               position={mesh.position}
               rotation={mesh.rotation}
+              highlightBox={scene.highlightBox}
             />
           )}
         </SuspenseLoader>

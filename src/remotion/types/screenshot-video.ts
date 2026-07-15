@@ -47,10 +47,13 @@ export interface PresetFrameOutput {
 /** Signatur aller Preset-Funktionen — pure, testbar, kein React */
 export type PresetComputeFn = (ctx: PresetFrameContext) => PresetFrameOutput;
 
+import type { BoundingBox } from "../../types/video-script";
+
 export type VideoScene = {
   readonly screenshotUrl: string;
   readonly headline: string;
   readonly subline: string;
+  readonly highlightBox?: BoundingBox;
 };
 
 /**

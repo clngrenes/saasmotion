@@ -1,7 +1,15 @@
+export type BoundingBox = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+};
+
 /** Von der KI generiertes Script (ohne Screenshot-URLs) */
 export type GeneratedSceneCopy = {
   readonly headline: string;
   readonly subline: string;
+  readonly highlightBox?: BoundingBox;
 };
 
 export type GeneratedArtDirection = {

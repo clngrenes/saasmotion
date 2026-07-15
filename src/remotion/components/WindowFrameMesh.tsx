@@ -4,6 +4,8 @@ import * as THREE from "three";
 import { CORNER_RADIUS_UNITS, type PanelVisualStyle } from "../art-direction/catalog";
 import { toMutableTuple } from "../presets";
 import type { Vec3 } from "../types/screenshot-video";
+import type { BoundingBox } from "../../types/video-script";
+import { UIHighlightLayer } from "./UIHighlightLayer";
 
 function createRoundedRectShape(
   width: number,
@@ -33,6 +35,7 @@ interface WindowFrameMeshProps {
   readonly rotation: Vec3;
   readonly panelStyle: PanelVisualStyle;
   readonly opacity?: number;
+  readonly highlightBox?: BoundingBox;
 }
 
 const MAX_WIDTH = 6.0;
@@ -45,6 +48,7 @@ export const WindowFrameMesh: React.FC<WindowFrameMeshProps> = ({
   rotation,
   panelStyle,
   opacity = 1,
+  highlightBox,
 }) => {
   const texture = useTexture(screenshotUrl);
   const cornerRadius = CORNER_RADIUS_UNITS[panelStyle.cornerRadius];
@@ -130,6 +134,25 @@ export const WindowFrameMesh: React.FC<WindowFrameMeshProps> = ({
         <planeGeometry args={[geometryData.w - 0.02, geometryData.h - 0.02]} />
         <meshBasicMaterial map={screenTexture} toneMapped={false} transparent opacity={opacity} />
       </mesh>
+
+      {/* Sliced 3D Highlight Layer */}
+      {highlightBox && (
+        <group position={[0, 0, DEPTH / 2 + 0.003]}>
+          <UIHighlightLayer
+            textureUrl={screenshotUrl}
+            highlightBox={highlightBox}
+            inlay={{
+              width: geometryData.w - 0.02,
+              height: geometryData.h - 0.02,
+              offsetX: 0,
+              offsetY: 0,
+              uvScale: [1, 1],
+              uvOffset: [0, 0],
+            }}
+            opacity={opacity}
+          />
+        </group>
+      )}
     </group>
   );
 };

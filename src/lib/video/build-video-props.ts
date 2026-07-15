@@ -57,6 +57,7 @@ export function mergeScenesWithCopy(
       screenshotUrl,
       headline: sceneCopy.headline,
       subline: sceneCopy.subline,
+      highlightBox: sceneCopy.highlightBox,
     };
   });
 }
