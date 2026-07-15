@@ -103,6 +103,7 @@ export function buildVideoProps(input: {
     background: input.background ?? art.background,
     panelStyle: input.panelStyle ?? artDirectionToPanelStyle(art),
     introMotion: input.introMotion ?? art.introMotion,
+    sceneTransition: art.sceneTransition,
     audioDirection: audio,
   };
 }

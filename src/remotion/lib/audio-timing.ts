@@ -1,6 +1,7 @@
-import { getSlideStartFrames } from "./slide-timing";
+import { getTransitionStartFrames } from "./slide-timing";
 import type { SfxStyleId } from "../constants/audio-catalog";
 import { SFX_DURATION_SECONDS } from "../constants/audio-catalog";
+import { DEFAULT_TRANSITION_DURATION_FRAMES } from "../transitions/ids";
 
 /** Frames before the visual cut where SFX should start so the peak hits the transition */
 const SFX_PEAK_OFFSET: Record<Exclude<SfxStyleId, "none">, number> = {
@@ -30,9 +31,12 @@ export function getAudioCues(input: {
   readonly playIntroRevealSfx: boolean;
   readonly transitionSfx: SfxStyleId;
   readonly fps?: number;
+  readonly transitionDurationFrames?: number;
 }): AudioCue[] {
   const fps = input.fps ?? 30;
   const cues: AudioCue[] = [];
+  const transitionDuration =
+    input.transitionDurationFrames ?? DEFAULT_TRANSITION_DURATION_FRAMES;
 
   if (input.transitionSfx === "none") {
     return cues;
@@ -40,7 +44,11 @@ export function getAudioCues(input: {
 
   const peakOffset = SFX_PEAK_OFFSET[input.transitionSfx];
   const contentDuration = Math.max(1, input.durationInFrames - input.introDurationFrames);
-  const slideStarts = getSlideStartFrames(contentDuration, input.slideCount);
+  const transitionStarts = getTransitionStartFrames(
+    contentDuration,
+    input.slideCount,
+    transitionDuration,
+  );
 
   if (input.playIntroRevealSfx) {
     const introCut = input.introDurationFrames;
@@ -50,7 +58,7 @@ export function getAudioCues(input: {
     });
   }
 
-  for (const contentStart of slideStarts.slice(1)) {
+  for (const contentStart of transitionStarts) {
     const absoluteCut = input.introDurationFrames + contentStart;
     cues.push({
       frame: Math.max(0, absoluteCut - peakOffset),

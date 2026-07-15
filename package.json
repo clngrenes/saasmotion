@@ -19,6 +19,7 @@
     "@remotion/player": "^4.0.489",
     "@remotion/renderer": "^4.0.489",
     "@remotion/three": "^4.0.489",
+    "@remotion/transitions": "^4.0.489",
     "@supabase/supabase-js": "^2.110.2",
     "ai": "^7.0.22",
     "inngest": "^4.12.1",

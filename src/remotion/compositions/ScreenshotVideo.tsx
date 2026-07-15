@@ -1,22 +1,21 @@
 import { PerspectiveCamera } from "@react-three/drei";
 import { ThreeCanvas } from "@remotion/three";
-import React, { useMemo } from "react";
-import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
+import React, { Fragment, useMemo } from "react";
+import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
+import { TransitionSeries } from "@remotion/transitions";
 import { BACKGROUND_CSS } from "../art-direction/catalog";
-import { applyIntroMotion, getIntroOpacity } from "../art-direction/intro-motion";
-import { DeviceFrameMesh } from "../components/DeviceFrameMesh";
-import { WindowFrameMesh } from "../components/WindowFrameMesh";
 import { ProductIntro } from "../components/ProductIntro";
-import { SceneHeadline } from "../components/SceneHeadline";
-import { SuspenseLoader } from "../components/SuspenseLoader";
+import { SceneSlide } from "../components/SceneSlide";
 import { VideoAudio } from "../components/VideoAudio";
 import { INTRO_DURATION_FRAMES } from "../constants/media";
-import { getSlideTiming } from "../lib/slide-timing";
+import { getSceneSequenceDuration } from "../lib/slide-timing";
 import {
-  computePresetFrame,
-  PRESET_CAMERA_CONFIG,
-  toMutableTuple,
-} from "../presets";
+  DEFAULT_SCENE_TRANSITION,
+  DEFAULT_TRANSITION_DURATION_FRAMES,
+  resolveSceneTransitionPresentation,
+  resolveSceneTransitionTiming,
+  type SceneTransitionId,
+} from "../transitions/catalog";
 import type { ScreenshotVideoProps } from "../types/screenshot-video";
 
 export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
@@ -33,9 +32,9 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   background = "dark-gradient",
   panelStyle,
   introMotion = "scale-in",
+  sceneTransition = DEFAULT_SCENE_TRANSITION,
 }) => {
-  const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   const safeScenes = scenes.length > 0 ? scenes : [
     {
@@ -45,47 +44,25 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
     },
   ];
 
-  const contentFrame = Math.max(0, frame - INTRO_DURATION_FRAMES);
   const contentDuration = Math.max(1, durationInFrames - INTRO_DURATION_FRAMES);
-  const showIntro = frame < INTRO_DURATION_FRAMES;
-
-  const { slideIndex, localFrame, localDuration } = useMemo(
-    () => getSlideTiming(contentFrame, contentDuration, safeScenes.length),
-    [contentFrame, contentDuration, safeScenes.length],
+  const sceneSequenceDuration = useMemo(
+    () => getSceneSequenceDuration(contentDuration, safeScenes.length),
+    [contentDuration, safeScenes.length],
   );
 
-  const activeScene = safeScenes[slideIndex] ?? safeScenes[0];
-
-  const baseMesh = computePresetFrame(presetName, {
-    frame: localFrame,
-    durationInFrames: localDuration,
-    fps,
-  }).mesh;
-
-  const mesh = applyIntroMotion(baseMesh, introMotion, localFrame);
-  const meshOpacity = getIntroOpacity(introMotion, localFrame);
-  const { fov } = PRESET_CAMERA_CONFIG[presetName];
-  const camera = computePresetFrame(presetName, {
-    frame: localFrame,
-    durationInFrames: localDuration,
-    fps,
-  }).camera;
+  const transitionPresentation = useMemo(
+    () => resolveSceneTransitionPresentation(sceneTransition as SceneTransitionId),
+    [sceneTransition],
+  );
+  const transitionTiming = useMemo(
+    () => resolveSceneTransitionTiming(sceneTransition as SceneTransitionId),
+    [sceneTransition],
+  );
 
   const backgroundStyle = BACKGROUND_CSS[background];
 
   return (
     <AbsoluteFill style={{ background: backgroundStyle }}>
-      {panelStyle?.backgroundBlur && (
-        <AbsoluteFill
-          style={{
-            background: backgroundStyle,
-            filter: "blur(28px)",
-            opacity: 0.45,
-            transform: "scale(1.08)",
-          }}
-        />
-      )}
-
       <VideoAudio
         durationInFrames={durationInFrames}
         slideCount={safeScenes.length}
@@ -93,58 +70,52 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
         enableAudio={enableAudio}
         audioDirection={audioDirection}
         fps={fps}
+        transitionDurationFrames={DEFAULT_TRANSITION_DURATION_FRAMES}
       />
 
       <Sequence from={0} durationInFrames={INTRO_DURATION_FRAMES}>
         <ProductIntro productName={productName} tagline={tagline} logoUrl={logoUrl} />
       </Sequence>
 
-      {!showIntro && (
-        <>
-          <ThreeCanvas
-            width={width}
-            height={height}
-            style={{ position: "absolute", top: 0, left: 0 }}
-            gl={{ antialias: true }}
-          >
-            <PerspectiveCamera
-              makeDefault
-              fov={fov}
-              position={toMutableTuple(camera.position)}
-              rotation={toMutableTuple(camera.rotation)}
-            />
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[3, 5, 6]} intensity={1.1} />
-            <SuspenseLoader>
-              {frameStyle === "window" && panelStyle ? (
-                <WindowFrameMesh
-                  key={activeScene.screenshotUrl}
-                  screenshotUrl={activeScene.screenshotUrl}
-                  position={mesh.position}
-                  rotation={mesh.rotation}
-                  panelStyle={panelStyle}
-                  opacity={meshOpacity}
-                />
-              ) : (
-                <DeviceFrameMesh
-                  key={activeScene.screenshotUrl}
-                  screenshotUrl={activeScene.screenshotUrl}
-                  position={mesh.position}
-                  rotation={mesh.rotation}
-                />
-              )}
-            </SuspenseLoader>
-          </ThreeCanvas>
-
-          <SceneHeadline
-            headline={activeScene.headline}
-            subline={activeScene.subline}
-            localFrame={localFrame}
-            localDuration={localDuration}
+      <Sequence from={INTRO_DURATION_FRAMES} durationInFrames={contentDuration}>
+        {safeScenes.length === 1 ? (
+          <SceneSlide
+            scene={safeScenes[0]}
+            durationInFrames={contentDuration}
+            presetName={presetName}
+            frameStyle={frameStyle}
+            background={background}
+            panelStyle={panelStyle}
+            introMotion={introMotion}
             textPreset={textPreset}
           />
-        </>
-      )}
+        ) : (
+          <TransitionSeries>
+            {safeScenes.map((scene, index) => (
+              <Fragment key={`${scene.screenshotUrl}-${index}`}>
+                <TransitionSeries.Sequence durationInFrames={sceneSequenceDuration}>
+                  <SceneSlide
+                    scene={scene}
+                    durationInFrames={sceneSequenceDuration}
+                    presetName={presetName}
+                    frameStyle={frameStyle}
+                    background={background}
+                    panelStyle={panelStyle}
+                    introMotion={introMotion}
+                    textPreset={textPreset}
+                  />
+                </TransitionSeries.Sequence>
+                {index < safeScenes.length - 1 && (
+                  <TransitionSeries.Transition
+                    presentation={transitionPresentation}
+                    timing={transitionTiming}
+                  />
+                )}
+              </Fragment>
+            ))}
+          </TransitionSeries>
+        )}
+      </Sequence>
     </AbsoluteFill>
   );
 };

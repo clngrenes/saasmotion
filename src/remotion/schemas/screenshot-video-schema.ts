@@ -10,6 +10,7 @@ import {
 } from "../constants/audio-catalog";
 import { VIDEO_ASPECT_RATIO_OPTIONS } from "../constants/aspect-ratio";
 import { TEXT_PRESET_IDS } from "../text-presets/catalog";
+import { SCENE_TRANSITION_IDS } from "../transitions/ids";
 import { CAMERA_PRESET_NAMES } from "../types/screenshot-video";
 
 const aspectRatioIds = VIDEO_ASPECT_RATIO_OPTIONS.map((o) => o.id) as [
@@ -51,6 +52,7 @@ export const screenshotVideoSchema = z.object({
     backgroundBlur: z.boolean(),
   }),
   introMotion: z.enum(INTRO_MOTION_IDS).default("scale-in"),
+  sceneTransition: z.enum(SCENE_TRANSITION_IDS).default("blur-fade"),
   audioDirection: z.object({
     reasoning: z.string().max(300),
     musicStyle: z.enum(MUSIC_STYLE_IDS),

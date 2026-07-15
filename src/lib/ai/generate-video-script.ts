@@ -16,6 +16,7 @@ import {
 } from "../../remotion/constants/audio-catalog";
 import { TEXT_PRESET_IDS, type TextPresetId } from "../../remotion/text-presets/catalog";
 import { CAMERA_PRESET_NAMES } from "../../remotion/types/screenshot-video";
+import { SCENE_TRANSITION_IDS } from "../../remotion/transitions/ids";
 import type { GeneratedVideoScript } from "../../types/video-script";
 import { scriptModel } from "./google";
 import { trimProductContext } from "./trim-product-context";
@@ -48,6 +49,7 @@ const scriptSchema = z.object({
       panelOpacity: z.number().min(0.8).max(1),
     }),
     introMotion: z.enum(INTRO_MOTION_IDS),
+    sceneTransition: z.enum(SCENE_TRANSITION_IDS),
   }),
   audioDirection: z.object({
     reasoning: z.string().min(1).max(300),
@@ -115,7 +117,8 @@ ART DIRECTION RULES:
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
-- reasoning: 1–2 sentences in plain English (founder-friendly, no jargon)
+- Pick sceneTransition: blur-fade for premium SaaS (default), slide-left/up for mobile, smooth-fade for minimal
+- Never leave hard cuts — always pick a transition style
 
 ${ART_DIRECTION_SKILL_GUIDE}
 

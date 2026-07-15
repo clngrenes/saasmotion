@@ -1,6 +1,14 @@
 import type { TextPresetId } from "../text-presets/catalog";
 import { DEFAULT_TEXT_PRESET } from "../text-presets/catalog";
 import type { CameraPresetName, FrameStyleId } from "../types/screenshot-video";
+import {
+  DEFAULT_SCENE_TRANSITION,
+  SCENE_TRANSITION_SKILL_GUIDE,
+  type SceneTransitionId,
+} from "../transitions/ids";
+
+export type { SceneTransitionId };
+export { SCENE_TRANSITION_SKILL_GUIDE };
 
 /** Hintergrund-Stile, die die KI wählen kann */
 export const BACKGROUND_STYLE_IDS = [
@@ -75,6 +83,7 @@ export type ArtDirection = {
     readonly panelOpacity: number;
   };
   readonly introMotion: IntroMotionId;
+  readonly sceneTransition: SceneTransitionId;
 };
 
 export const DEFAULT_ART_DIRECTION: ArtDirection = {
@@ -96,6 +105,7 @@ export const DEFAULT_ART_DIRECTION: ArtDirection = {
     panelOpacity: 1,
   },
   introMotion: "scale-in",
+  sceneTransition: DEFAULT_SCENE_TRANSITION,
 };
 
 export const CORNER_RADIUS_UNITS: Record<CornerRadiusId, number> = {
@@ -170,6 +180,8 @@ LENGTH (durationInFrames — pick based on screenshot count + story depth):
 
 Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9.
 Mobile consumer → phone + slide + grow + 9:16. AI/futuristic → window + orbit + cinematic-space + glass.
+
+${SCENE_TRANSITION_SKILL_GUIDE}
 `;
 
 export function inferDurationFromSceneCount(sceneCount: number): VideoDurationFrames {

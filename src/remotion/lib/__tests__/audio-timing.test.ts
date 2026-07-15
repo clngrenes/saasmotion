@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { INTRO_DURATION_FRAMES } from "../../constants/media";
+import { DEFAULT_TRANSITION_DURATION_FRAMES } from "../../transitions/ids";
 import { getAudioCues } from "../audio-timing";
+import { getTransitionStartFrames } from "../slide-timing";
 
 describe("getAudioCues", () => {
   it("places intro reveal SFX before the intro cut", () => {
@@ -18,7 +20,7 @@ describe("getAudioCues", () => {
     expect(introCue!.frame).toBe(INTRO_DURATION_FRAMES - 5);
   });
 
-  it("places scene transition SFX before each slide boundary", () => {
+  it("places scene transition SFX before each smooth transition", () => {
     const cues = getAudioCues({
       durationInFrames: 900,
       slideCount: 3,
@@ -26,19 +28,20 @@ describe("getAudioCues", () => {
       playIntroRevealSfx: false,
       transitionSfx: "whoosh",
       fps: 30,
+      transitionDurationFrames: DEFAULT_TRANSITION_DURATION_FRAMES,
     });
 
     const transitions = cues.filter((c) => c.type === "scene-transition");
     expect(transitions).toHaveLength(2);
 
     const contentDuration = 900 - INTRO_DURATION_FRAMES;
-    const framesPerSlide = Math.floor(contentDuration / 3);
+    const transitionStarts = getTransitionStartFrames(contentDuration, 3);
 
     expect(transitions[0].frame).toBe(
-      INTRO_DURATION_FRAMES + framesPerSlide - 5,
+      INTRO_DURATION_FRAMES + transitionStarts[0] - 5,
     );
     expect(transitions[1].frame).toBe(
-      INTRO_DURATION_FRAMES + framesPerSlide * 2 - 5,
+      INTRO_DURATION_FRAMES + transitionStarts[1] - 5,
     );
   });
 

@@ -23,6 +23,12 @@ export type GeneratedArtDirection = {
     readonly panelOpacity: number;
   };
   readonly introMotion: "scale-in" | "slide-up" | "fade" | "none";
+  readonly sceneTransition:
+    | "smooth-fade"
+    | "blur-fade"
+    | "slide-left"
+    | "slide-up"
+    | "wipe-soft";
 };
 
 export type GeneratedAudioDirection = {

@@ -11,6 +11,10 @@ import {
 } from "../../remotion/art-direction/catalog";
 import type { TextPresetId } from "../../remotion/text-presets/catalog";
 import { isTextPresetId } from "../../remotion/text-presets/catalog";
+import {
+  SCENE_TRANSITION_IDS,
+  type SceneTransitionId,
+} from "../../remotion/transitions/ids";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
 
 export function generatedArtDirectionToArtDirection(
@@ -42,7 +46,14 @@ export function generatedArtDirectionToArtDirection(
     effects: generated.effects,
     style: generated.style,
     introMotion: generated.introMotion,
+    sceneTransition: isSceneTransitionId(generated.sceneTransition)
+      ? generated.sceneTransition
+      : DEFAULT_ART_DIRECTION.sceneTransition,
   };
+}
+
+function isSceneTransitionId(value: string): value is SceneTransitionId {
+  return (SCENE_TRANSITION_IDS as readonly string[]).includes(value);
 }
 
 export function applyArtDirectionToProps(
@@ -57,6 +68,7 @@ export function applyArtDirectionToProps(
     background: art.background,
     panelStyle: artDirectionToPanelStyle(art),
     introMotion: art.introMotion,
+    sceneTransition: art.sceneTransition,
   };
 }
 

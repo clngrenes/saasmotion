@@ -6,6 +6,7 @@ import type {
   PanelVisualStyle,
 } from "../art-direction/catalog";
 import type { AudioDirection } from "../constants/audio-catalog";
+import type { SceneTransitionId } from "../transitions/ids";
 
 /** Preset-IDs — kebab-case, stabil für API/DB/Lambda-Props */
 export const CAMERA_PRESET_NAMES = [
@@ -76,6 +77,7 @@ export type ScreenshotVideoProps = {
   readonly panelStyle: PanelVisualStyle;
   readonly introMotion: IntroMotionId;
   readonly audioDirection: AudioDirection;
+  readonly sceneTransition: SceneTransitionId;
 };
 
 /** Device-Frame Geometrie-Konstanten (Option B Default) */

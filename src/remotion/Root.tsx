@@ -47,6 +47,7 @@ const defaultProps = {
   background: DEFAULT_ART_DIRECTION.background,
   panelStyle: artDirectionToPanelStyle(DEFAULT_ART_DIRECTION),
   introMotion: DEFAULT_ART_DIRECTION.introMotion,
+  sceneTransition: DEFAULT_ART_DIRECTION.sceneTransition,
   audioDirection: DEFAULT_AUDIO_DIRECTION,
 } satisfies ScreenshotVideoProps;
 

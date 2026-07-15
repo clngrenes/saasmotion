@@ -440,6 +440,7 @@ export default function PreviewPage() {
             effects: artDirection.effects,
             style: artDirection.style,
             introMotion: artDirection.introMotion,
+            sceneTransition: artDirection.sceneTransition,
           },
           audioDirection: {
             reasoning: audioDirection.reasoning,
