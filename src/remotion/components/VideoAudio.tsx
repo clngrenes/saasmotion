@@ -35,13 +35,7 @@ const MusicBed: React.FC<{
   return (
     <Audio
       src={resolveAudioSrc(src)}
-      volume={(f) => {
-        const fadeIn = interpolate(f, [0, 24], [0, 1], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
-        return volume * fadeIn;
-      }}
+      volume={volume}
       loop
       startFrom={0}
     />
