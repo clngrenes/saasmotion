@@ -10,6 +10,7 @@ import {
   type ArtDirection,
 } from "../../remotion/art-direction/catalog";
 import type { TextPresetId } from "../../remotion/text-presets/catalog";
+import { isTextPresetId } from "../../remotion/text-presets/catalog";
 import {
   SCENE_TRANSITION_IDS,
   type SceneTransitionId,
@@ -48,7 +49,9 @@ export function generatedArtDirectionToArtDirection(
     reasoning: generated.reasoning,
     cameraPreset: generated.cameraPreset,
     frameStyle: generated.frameStyle,
-    textPreset: "static",
+    textPreset: isTextPresetId(generated.textPreset)
+      ? generated.textPreset
+      : DEFAULT_ART_DIRECTION.textPreset,
     aspectRatio,
     durationInFrames,
     background: generated.background,

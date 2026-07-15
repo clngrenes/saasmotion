@@ -52,7 +52,7 @@ export type TextPresetId =
 export const TEXT_PRESET_IDS: readonly TextPresetId[] =
   TEXT_PRESET_CATEGORIES.flatMap((c) => c.presets.map((p) => p.id));
 
-export const DEFAULT_TEXT_PRESET: TextPresetId = "static";
+export const DEFAULT_TEXT_PRESET: TextPresetId = "slide-up";
 
 export function isTextPresetId(value: string): value is TextPresetId {
   return TEXT_PRESET_IDS.includes(value as TextPresetId);

@@ -88,7 +88,6 @@ function toGeneratedVideoScript(
     scenes: object.scenes,
     artDirection: {
       ...object.artDirection,
-      textPreset: "static",
       durationInFrames: parseDurationInFrames(
         requestedDuration ?? object.artDirection.durationInFrames,
         sceneCount,
@@ -144,7 +143,7 @@ ART DIRECTION RULES:
 - durationInFrames: ${input.requestedDuration ? `MUST USE "${input.requestedDuration}". Since the user locked this duration, if it's long (e.g. 1800+) but screenshot count is low, you MUST write rich, engaging, multi-part story copy to fill the time!` : "match screenshot count — 1–2 screens → \"900\", 3–4 → \"1800\", 5–6 → \"2700\", 7+ → \"3600\" (string values)"}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - cameraPreset: use "crash-zoom" for CONVERSION funnel stage (fast, aggressive). Otherwise prefer "linear-style" for desktop/high-end products. Use "minimal-flat" only for very simple mobile apps.
-- textPreset: MUST ALWAYS be "static" — no text motion, headlines stay fixed on screen
+- textPreset: prefer "kinetic-words" or "slide-up" for premium SaaS product videos (Linear/Apple style). Use kinetic-timeline when subline has steps separated by '|'. Never use "static".
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
 - Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)

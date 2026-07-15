@@ -168,9 +168,12 @@ FRAME:
 - window: desktop/web UI floating panel — SaaS dashboards, web apps (default for desktop screenshots)
 - phone: device frame — mobile apps, iOS/Android screenshots
 
-TEXT:
-- ALWAYS use textPreset "static" — headlines and sublines are shown fixed on screen with no entrance, exit, or kinetic animation (Linear/Apple SaaS style)
-- Typography uses Inter — clean, modern, premium SaaS product video standard
+TEXT ANIMATION (Inter typography — always animate, never static):
+- kinetic-words: default for premium SaaS — words stagger in with spring physics (Linear style)
+- kinetic-pills / kinetic-chat: high-end editorial motion for launches and conversational products
+- kinetic-timeline: use '|' in subline for 2–3 steps (e.g. 'Login | Scan | Export')
+- slide-up / fade / blur-in: clean confident reveals when kinetic feels too busy
+- NEVER use "static" — text must always have entrance motion
 
 BACKGROUND:
 - dark-gradient: safe default, cinematic SaaS
