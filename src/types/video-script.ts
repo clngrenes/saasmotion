@@ -14,7 +14,7 @@ export type GeneratedSceneCopy = {
 
 export type GeneratedArtDirection = {
   readonly reasoning: string;
-  readonly cameraPreset: "zelios-style" | "apple-style" | "minimal-flat";
+  readonly cameraPreset: "zelios-style" | "apple-style" | "minimal-flat" | "linear-style";
   readonly frameStyle: "phone" | "window";
   readonly textPreset: string;
   readonly aspectRatio: "9:16" | "16:9" | "1:1" | "4:5";

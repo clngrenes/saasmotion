@@ -158,8 +158,9 @@ You are also the motion art director. Pick the best visual skills for this produ
 ${MOTION_DIRECTOR_SKILL_GUIDE}
 
 TRANSFORM (camera / motion):
+- linear-style (Whip Zoom): fast snap zoom directly into the highlighted element, extreme easing — ultra-premium "Linear" or "Vercel" launch style
 - zelios-style (Dolly): slow push-in, subtle Y swing — enterprise, calm, trustworthy
-- apple-style (3D Orbit): smooth isometric X+Y rotation — premium product demos (OpenAI/Linear style)
+- apple-style (3D Orbit): smooth isometric X+Y rotation — premium product demos (OpenAI style)
 - minimal-flat (Slide): flat slide-up, no rotation — playful, simple, mobile-first apps
 
 FRAME:
@@ -210,7 +211,7 @@ LENGTH (durationInFrames — pick based on screenshot count + story depth):
 
 Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9 + blur-fade throughout.
 Mobile consumer → phone + slide + grow + 9:16 + blur-scale logo + slide-up transitions.
-AI/futuristic → window + orbit + cinematic-space + glass + dark logo intro + blur-slide-up.
+AI/futuristic → window + linear-style snap zooms + cinematic-space + glass + dark logo intro + blur-slide-up.
 
 ${SCENE_TRANSITION_SKILL_GUIDE}
 

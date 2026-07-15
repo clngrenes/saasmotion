@@ -47,6 +47,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     frame,
     durationInFrames,
     fps,
+    highlightBox: scene.highlightBox,
   }).mesh;
 
   const mesh = applyIntroMotion(baseMesh, introMotion, frame);
@@ -56,6 +57,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     frame,
     durationInFrames,
     fps,
+    highlightBox: scene.highlightBox,
   }).camera;
 
   const cameraProps = useMemo(

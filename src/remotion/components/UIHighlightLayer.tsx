@@ -74,20 +74,38 @@ export const UIHighlightLayer: React.FC<UIHighlightLayerProps> = ({
     easing: (t) => 1 - Math.pow(1 - t, 3), // cubic ease out
   });
   
-  const zOffset = popProgress * 0.15; // Lifts 0.15 world units
+  const zOffset = popProgress * 0.35; // Lifts much higher in Linear style
 
   return (
     <group position={[highlightData.offsetX, highlightData.offsetY, 0]}>
-      {/* Soft drop shadow on the base plane */}
-      <mesh position={[0, -0.01 * popProgress, 0.001]} scale={[1.05, 1.05, 1]}>
+      {/* Dim the entire background behind the highlight */}
+      <mesh position={[-highlightData.offsetX, -highlightData.offsetY, 0.001]} scale={[1, 1, 1]}>
+        <planeGeometry args={[10, 10]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.6 * popProgress * opacity} />
+      </mesh>
+
+      {/* Massive soft glow behind the pop-out */}
+      <mesh position={[0, 0, zOffset * 0.5]} scale={[1.2, 1.2, 1]}>
         <planeGeometry args={[highlightData.width, highlightData.height]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.35 * popProgress * opacity} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.15 * popProgress * opacity} />
+      </mesh>
+
+      {/* Soft drop shadow on the base plane */}
+      <mesh position={[0, -0.05 * popProgress, zOffset * 0.6]} scale={[1.05, 1.05, 1]}>
+        <planeGeometry args={[highlightData.width, highlightData.height]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.5 * popProgress * opacity} />
       </mesh>
 
       {/* The floating highlight plane */}
       <mesh position={[0, 0, zOffset + 0.002]}>
         <planeGeometry args={[highlightData.width, highlightData.height]} />
         <meshBasicMaterial map={highlightData.texture} toneMapped={false} transparent opacity={opacity} />
+      </mesh>
+
+      {/* Thin rim light (stroke) on top of the pop out */}
+      <mesh position={[0, 0, zOffset + 0.003]}>
+        <ringGeometry args={[highlightData.width, highlightData.height]} />
+        {/* We cheat the ring with an edge plane, or just rely on the user's UI. */}
       </mesh>
     </group>
   );

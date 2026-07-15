@@ -32,6 +32,7 @@ const PRESET_LABELS: Record<CameraPresetName, string> = {
   "zelios-style": "Dolly",
   "apple-style": "3D Orbit",
   "minimal-flat": "Slide",
+  "linear-style": "Whip Zoom",
 };
 
 export const StyleControls: React.FC<StyleControlsProps> = ({

@@ -15,6 +15,7 @@ export const CAMERA_PRESET_NAMES = [
   "zelios-style",
   "apple-style",
   "minimal-flat",
+  "linear-style",
 ] as const;
 
 export type CameraPresetName = (typeof CAMERA_PRESET_NAMES)[number];
@@ -33,6 +34,7 @@ export interface PresetFrameContext {
   readonly frame: number;
   readonly durationInFrames: number;
   readonly fps: number;
+  readonly highlightBox?: BoundingBox;
 }
 
 /**
