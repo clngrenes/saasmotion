@@ -8,7 +8,7 @@ async function getFont() {
   if (!fontData) {
     // Inter Regular
     const res = await fetch(
-      "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2",
+      "https://raw.githubusercontent.com/rsms/inter/master/docs/font-files/Inter-Regular.woff"
     );
     fontData = await res.arrayBuffer();
   }

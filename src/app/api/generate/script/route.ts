@@ -3,6 +3,8 @@ import { z } from "zod";
 import { generateVideoScript } from "../../../../lib/ai/generate-video-script";
 import { trimProductContext } from "../../../../lib/ai/trim-product-context";
 
+export const maxDuration = 300; // Allow enough time for script generation
+
 const requestSchema = z.object({
   productDescription: z.string().min(10).max(4000),
   productContext: z.string().max(500_000).optional(),

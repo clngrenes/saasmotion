@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { reconstructScreenshot } from "../../../../lib/ai/reconstruct-screenshot";
 
+export const maxDuration = 300; // Allow enough time for 2-pass verification
+
 const requestSchema = z.object({
   screenshotUrl: z.string().url(),
   screenshotName: z.string().max(120).optional(),
