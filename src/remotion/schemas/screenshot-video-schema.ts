@@ -15,6 +15,10 @@ import {
   LOGO_INTRO_BACKDROP_IDS,
   LOGO_INTRO_MOTION_IDS,
 } from "../motion-skills/ids";
+import {
+  SVG_ACCENT_IDS,
+  SVG_MOTION_IDS,
+} from "../motion-skills/svg/ids";
 import { CAMERA_PRESET_NAMES } from "../types/screenshot-video";
 
 const aspectRatioIds = VIDEO_ASPECT_RATIO_OPTIONS.map((o) => o.id) as [
@@ -59,6 +63,8 @@ export const screenshotVideoSchema = z.object({
   sceneTransition: z.enum(SCENE_TRANSITION_IDS).default("blur-fade"),
   logoIntroMotion: z.enum(LOGO_INTRO_MOTION_IDS).default("blur-fade"),
   logoIntroBackdrop: z.enum(LOGO_INTRO_BACKDROP_IDS).default("white"),
+  svgMotion: z.enum(SVG_MOTION_IDS).default("ambient-blobs"),
+  svgAccent: z.enum(SVG_ACCENT_IDS).default("violet"),
   audioDirection: z.object({
     reasoning: z.string().max(300),
     musicStyle: z.enum(MUSIC_STYLE_IDS),

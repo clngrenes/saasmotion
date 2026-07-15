@@ -21,6 +21,10 @@ import {
   LOGO_INTRO_BACKDROP_IDS,
   LOGO_INTRO_MOTION_IDS,
 } from "../../remotion/motion-skills/ids";
+import {
+  SVG_ACCENT_IDS,
+  SVG_MOTION_IDS,
+} from "../../remotion/motion-skills/svg/ids";
 import type { GeneratedVideoScript } from "../../types/video-script";
 import { scriptModel } from "./google";
 import { trimProductContext } from "./trim-product-context";
@@ -56,6 +60,8 @@ const scriptSchema = z.object({
     sceneTransition: z.enum(SCENE_TRANSITION_IDS),
     logoIntroMotion: z.enum(LOGO_INTRO_MOTION_IDS),
     logoIntroBackdrop: z.enum(LOGO_INTRO_BACKDROP_IDS),
+    svgMotion: z.enum(SVG_MOTION_IDS),
+    svgAccent: z.enum(SVG_ACCENT_IDS),
   }),
   audioDirection: z.object({
     reasoning: z.string().min(1).max(300),
@@ -93,6 +99,9 @@ function buildPrompt(input: {
   productContext?: string;
   screenshotNames: readonly string[];
   hasVision: boolean;
+  hasLogo: boolean;
+  requestedDuration?: number;
+  requestedAspectRatio?: string;
 }): string {
   const sceneCount = Math.max(1, input.screenshotNames.length);
   const context = trimProductContext(input.productContext);
@@ -119,12 +128,16 @@ COPY RULES:
 ART DIRECTION RULES:
 - Pick ONE coherent visual direction for the whole video — the founder will not adjust anything
 - aspectRatio: infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)
+${input.requestedAspectRatio ? `- USER REQUESTED ASPECT RATIO: MUST USE "${input.requestedAspectRatio}"` : ""}
 - durationInFrames: match screenshot count — 1–2 screens → "900", 3–4 → "1800", 5–6 → "2700", 7+ → "3600" (string values)
+${input.requestedDuration ? `- USER REQUESTED DURATION: MUST USE "${input.requestedDuration}". If duration is long (e.g. 1800+) but screenshot count is low, write rich, engaging, multi-part story copy to fill the time!` : ""}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
-- Pick logoIntroMotion + logoIntroBackdrop + sceneTransition as ONE Jitter-style motion language (see skill guide)
+- Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)
 - logoIntroBackdrop: white for light/minimal products, dark for dev tools & AI
+- svgMotion: only when logo is uploaded — use "none" when no logo; pick svgAccent from dominant UI brand color
+${input.hasLogo ? "- Logo IS uploaded — choose a svgMotion skill that complements logoIntroMotion" : "- No logo uploaded — svgMotion MUST be none"}
 
 ${ART_DIRECTION_SKILL_GUIDE}
 
@@ -150,6 +163,9 @@ export async function generateVideoScript(input: {
   productContext?: string;
   screenshotNames: readonly string[];
   screenshotUrls?: readonly string[];
+  hasLogo?: boolean;
+  requestedDuration?: number;
+  requestedAspectRatio?: string;
 }): Promise<GeneratedVideoScript> {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error(
@@ -166,6 +182,9 @@ export async function generateVideoScript(input: {
     productContext: input.productContext,
     screenshotNames: input.screenshotNames,
     hasVision,
+    hasLogo: input.hasLogo ?? false,
+    requestedDuration: input.requestedDuration,
+    requestedAspectRatio: input.requestedAspectRatio,
   });
 
   const imageParts = hasVision

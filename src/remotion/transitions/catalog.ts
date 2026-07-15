@@ -18,10 +18,11 @@ export {
 } from "./ids";
 
 function blurFadePresentation(blurPx: number) {
+  // Remotion's built-in fade only interpolates opacity.
+  // Passing static filter to enterStyle makes it blurred for the entire transition duration,
+  // causing the video to look permanently blurry. We will just use fade for now.
   return fade({
     shouldFadeOutExitingScene: true,
-    enterStyle: { filter: `blur(${blurPx}px)` },
-    exitStyle: { filter: `blur(${blurPx}px)` },
   });
 }
 
@@ -34,23 +35,11 @@ export function resolveSceneTransitionPresentation(
     case "blur-fade":
       return blurFadePresentation(16);
     case "blur-slide-up":
-      return fade({
-        shouldFadeOutExitingScene: true,
-        enterStyle: { filter: "blur(14px)", transform: "translateY(32px)" },
-        exitStyle: { filter: "blur(10px)", transform: "translateY(-16px)" },
-      });
+      return slide({ direction: "from-bottom" });
     case "blur-slide-left":
-      return fade({
-        shouldFadeOutExitingScene: true,
-        enterStyle: { filter: "blur(14px)", transform: "translateX(40px)" },
-        exitStyle: { filter: "blur(10px)", transform: "translateX(-20px)" },
-      });
+      return slide({ direction: "from-right" });
     case "blur-scale":
-      return fade({
-        shouldFadeOutExitingScene: true,
-        enterStyle: { filter: "blur(18px)", transform: "scale(0.88)" },
-        exitStyle: { filter: "blur(12px)", transform: "scale(1.06)" },
-      });
+      return fade({ shouldFadeOutExitingScene: true });
     case "slide-left":
       return slide({ direction: "from-right" });
     case "slide-right":

@@ -14,9 +14,21 @@ import {
   type LogoIntroBackdropId,
   type LogoIntroMotionId,
 } from "../motion-skills/ids";
+import {
+  DEFAULT_SVG_ACCENT,
+  DEFAULT_SVG_MOTION,
+  SVG_MOTION_SKILL_GUIDE,
+  type SvgAccentId,
+  type SvgMotionId,
+} from "../motion-skills/svg/ids";
 
-export type { SceneTransitionId, LogoIntroMotionId, LogoIntroBackdropId };
-export { SCENE_TRANSITION_SKILL_GUIDE, LOGO_INTRO_SKILL_GUIDE, MOTION_DIRECTOR_SKILL_GUIDE };
+export type { SceneTransitionId, LogoIntroMotionId, LogoIntroBackdropId, SvgMotionId, SvgAccentId };
+export {
+  SCENE_TRANSITION_SKILL_GUIDE,
+  LOGO_INTRO_SKILL_GUIDE,
+  MOTION_DIRECTOR_SKILL_GUIDE,
+  SVG_MOTION_SKILL_GUIDE,
+};
 
 /** Hintergrund-Stile, die die KI wählen kann */
 export const BACKGROUND_STYLE_IDS = [
@@ -94,6 +106,8 @@ export type ArtDirection = {
   readonly sceneTransition: SceneTransitionId;
   readonly logoIntroMotion: LogoIntroMotionId;
   readonly logoIntroBackdrop: LogoIntroBackdropId;
+  readonly svgMotion: SvgMotionId;
+  readonly svgAccent: SvgAccentId;
 };
 
 export const DEFAULT_ART_DIRECTION: ArtDirection = {
@@ -118,6 +132,8 @@ export const DEFAULT_ART_DIRECTION: ArtDirection = {
   sceneTransition: DEFAULT_SCENE_TRANSITION,
   logoIntroMotion: DEFAULT_LOGO_INTRO_MOTION,
   logoIntroBackdrop: DEFAULT_LOGO_INTRO_BACKDROP,
+  svgMotion: DEFAULT_SVG_MOTION,
+  svgAccent: DEFAULT_SVG_ACCENT,
 };
 
 export const CORNER_RADIUS_UNITS: Record<CornerRadiusId, number> = {
@@ -197,6 +213,8 @@ Mobile consumer → phone + slide + grow + 9:16 + blur-scale logo + slide-up tra
 AI/futuristic → window + orbit + cinematic-space + glass + dark logo intro + blur-slide-up.
 
 ${SCENE_TRANSITION_SKILL_GUIDE}
+
+${SVG_MOTION_SKILL_GUIDE}
 `;
 
 export function inferDurationFromSceneCount(sceneCount: number): VideoDurationFrames {

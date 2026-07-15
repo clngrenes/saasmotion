@@ -50,6 +50,8 @@ const defaultProps = {
   sceneTransition: DEFAULT_ART_DIRECTION.sceneTransition,
   logoIntroMotion: DEFAULT_ART_DIRECTION.logoIntroMotion,
   logoIntroBackdrop: DEFAULT_ART_DIRECTION.logoIntroBackdrop,
+  svgMotion: DEFAULT_ART_DIRECTION.svgMotion,
+  svgAccent: DEFAULT_ART_DIRECTION.svgAccent,
   audioDirection: DEFAULT_AUDIO_DIRECTION,
 } satisfies ScreenshotVideoProps;
 

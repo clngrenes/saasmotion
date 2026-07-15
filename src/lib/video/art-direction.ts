@@ -21,6 +21,12 @@ import {
   type LogoIntroBackdropId,
   type LogoIntroMotionId,
 } from "../../remotion/motion-skills/ids";
+import {
+  SVG_ACCENT_IDS,
+  SVG_MOTION_IDS,
+  type SvgAccentId,
+  type SvgMotionId,
+} from "../../remotion/motion-skills/svg/ids";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
 
 export function generatedArtDirectionToArtDirection(
@@ -61,6 +67,12 @@ export function generatedArtDirectionToArtDirection(
     logoIntroBackdrop: isLogoIntroBackdropId(generated.logoIntroBackdrop)
       ? generated.logoIntroBackdrop
       : DEFAULT_ART_DIRECTION.logoIntroBackdrop,
+    svgMotion: isSvgMotionId(generated.svgMotion)
+      ? generated.svgMotion
+      : DEFAULT_ART_DIRECTION.svgMotion,
+    svgAccent: isSvgAccentId(generated.svgAccent)
+      ? generated.svgAccent
+      : DEFAULT_ART_DIRECTION.svgAccent,
   };
 }
 
@@ -74,6 +86,14 @@ function isLogoIntroBackdropId(value: string): value is LogoIntroBackdropId {
 
 function isSceneTransitionId(value: string): value is SceneTransitionId {
   return (SCENE_TRANSITION_IDS as readonly string[]).includes(value);
+}
+
+function isSvgMotionId(value: string): value is SvgMotionId {
+  return (SVG_MOTION_IDS as readonly string[]).includes(value);
+}
+
+function isSvgAccentId(value: string): value is SvgAccentId {
+  return (SVG_ACCENT_IDS as readonly string[]).includes(value);
 }
 
 export function applyArtDirectionToProps(
@@ -91,6 +111,8 @@ export function applyArtDirectionToProps(
     sceneTransition: art.sceneTransition,
     logoIntroMotion: art.logoIntroMotion,
     logoIntroBackdrop: art.logoIntroBackdrop,
+    svgMotion: art.svgMotion,
+    svgAccent: art.svgAccent,
   };
 }
 

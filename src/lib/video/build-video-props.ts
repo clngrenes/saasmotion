@@ -106,6 +106,8 @@ export function buildVideoProps(input: {
     sceneTransition: art.sceneTransition,
     logoIntroMotion: art.logoIntroMotion,
     logoIntroBackdrop: art.logoIntroBackdrop,
+    svgMotion: art.svgMotion,
+    svgAccent: art.svgAccent,
     audioDirection: audio,
   };
 }

@@ -14,6 +14,10 @@ import {
   DEFAULT_LOGO_INTRO_MOTION,
 } from "../motion-skills/ids";
 import {
+  DEFAULT_SVG_ACCENT,
+  DEFAULT_SVG_MOTION,
+} from "../motion-skills/svg/ids";
+import {
   DEFAULT_SCENE_TRANSITION,
   DEFAULT_TRANSITION_DURATION_FRAMES,
   resolveSceneTransitionPresentation,
@@ -37,6 +41,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   sceneTransition = DEFAULT_SCENE_TRANSITION,
   logoIntroMotion = DEFAULT_LOGO_INTRO_MOTION,
   logoIntroBackdrop = DEFAULT_LOGO_INTRO_BACKDROP,
+  svgMotion = DEFAULT_SVG_MOTION,
+  svgAccent = DEFAULT_SVG_ACCENT,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -84,6 +90,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
             logoUrl={logoUrl}
             logoIntroMotion={logoIntroMotion}
             logoIntroBackdrop={logoIntroBackdrop}
+            svgMotion={svgMotion}
+            svgAccent={svgAccent}
           />
         </Sequence>
       )}

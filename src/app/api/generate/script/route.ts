@@ -8,6 +8,9 @@ const requestSchema = z.object({
   productContext: z.string().max(500_000).optional(),
   screenshotNames: z.array(z.string().min(1)).min(1).max(8),
   screenshotUrls: z.array(z.string().url()).min(1).max(8).optional(),
+  hasLogo: z.boolean().optional(),
+  requestedDuration: z.number().optional(),
+  requestedAspectRatio: z.string().optional(),
 });
 
 export async function POST(request: Request) {

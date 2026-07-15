@@ -6,6 +6,7 @@ import { AssetDropzone } from "../components/studio/AssetDropzone";
 import { BriefForm } from "../components/studio/BriefForm";
 import { ExportProgressPanel, type ExportPhase } from "../components/studio/ExportProgressPanel";
 import { LogoDropzone } from "../components/studio/LogoDropzone";
+import { FormatLengthSelector } from "../components/studio/FormatLengthSelector";
 import { StudioSection } from "../components/studio/StudioSection";
 import {
   DEFAULT_TEXT_PRESET,
@@ -147,6 +148,15 @@ export default function PreviewPage() {
       });
       const nextItems = [...items, ...newItems];
       setItems(nextItems);
+      
+      if (items.length === 0) {
+        // Auto-select duration based on screen count if user hasn't explicitly set it yet
+        if (nextItems.length <= 2) setDurationInFrames(900);
+        else if (nextItems.length <= 4) setDurationInFrames(1800);
+        else if (nextItems.length <= 6) setDurationInFrames(2700);
+        else setDurationInFrames(3600);
+      }
+
       setSceneCopy((prev) => {
         const next = [...prev];
         for (let i = prev.length; i < nextItems.length; i += 1) {
@@ -256,6 +266,9 @@ export default function PreviewPage() {
         productContext: productContext || undefined,
         screenshotNames: items.map((i) => i.file.name),
         screenshotUrls: urls,
+        hasLogo: Boolean(logoUrl),
+        requestedDuration: durationInFrames,
+        requestedAspectRatio: aspectRatio,
       }),
     });
     if (!res.ok) {
@@ -265,7 +278,7 @@ export default function PreviewPage() {
     const data = (await res.json()) as GeneratedVideoScript;
     applyScriptToState(data);
     return data;
-  }, [applyScriptToState, items, productContext, productDescription, uploadedUrls]);
+  }, [applyScriptToState, items, productContext, productDescription, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
 
   const runPreviewGeneration = useCallback(async () => {
     if (items.length === 0 || isUploading) return;
@@ -443,6 +456,8 @@ export default function PreviewPage() {
             sceneTransition: artDirection.sceneTransition,
             logoIntroMotion: artDirection.logoIntroMotion,
             logoIntroBackdrop: artDirection.logoIntroBackdrop,
+            svgMotion: artDirection.svgMotion,
+            svgAccent: artDirection.svgAccent,
           },
           audioDirection: {
             reasoning: audioDirection.reasoning,
@@ -510,8 +525,23 @@ export default function PreviewPage() {
           </p>
         </header>
 
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">
-          <StudioSection title="Screenshots" hint={`${items.length}/8`}>
+      <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">
+        <StudioSection title="Format & Length" hint="optional">
+          <FormatLengthSelector
+            aspectRatio={aspectRatio}
+            durationInFrames={durationInFrames}
+            onAspectRatioChange={(val) => {
+              setAspectRatio(val);
+              setPreviewReady(false);
+            }}
+            onDurationChange={(val) => {
+              setDurationInFrames(val);
+              setPreviewReady(false);
+            }}
+          />
+        </StudioSection>
+
+        <StudioSection title="Screenshots" hint={`${items.length}/8`}>
             <AssetDropzone
               items={items}
               isUploading={isUploading}

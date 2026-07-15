@@ -48,6 +48,16 @@ export type GeneratedArtDirection = {
     | "mask-reveal-up"
     | "mask-reveal-center";
   readonly logoIntroBackdrop: "white" | "dark";
+  readonly svgMotion:
+    | "none"
+    | "ambient-blobs"
+    | "stroke-frame"
+    | "radial-burst"
+    | "orbit-dots"
+    | "shape-pop"
+    | "wave-underline"
+    | "mesh-glow";
+  readonly svgAccent: "violet" | "cyan" | "emerald" | "rose" | "amber" | "neutral";
 };
 
 export type GeneratedAudioDirection = {
@@ -72,6 +82,9 @@ export type GenerateScriptRequest = {
   readonly productContext?: string;
   readonly screenshotNames: readonly string[];
   readonly screenshotUrls?: readonly string[];
+  readonly hasLogo?: boolean;
+  readonly requestedDuration?: number;
+  readonly requestedAspectRatio?: "9:16" | "16:9" | "1:1" | "4:5";
 };
 
 export type GenerateScriptResponse = GeneratedVideoScript;

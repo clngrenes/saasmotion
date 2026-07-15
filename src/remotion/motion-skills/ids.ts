@@ -51,4 +51,8 @@ Match motion to product mood:
 
 Never mix chaotic directions (e.g. flip transitions + minimal fade logo + kinetic-chat).
 ${LOGO_INTRO_SKILL_GUIDE}
+
+SVG vector layers (see SVG_MOTION_SKILL_GUIDE in art-direction catalog):
+- Pair svgMotion with logo intro — ambient-blobs + blur-fade, stroke-frame + mask-reveal, radial-burst + blur-scale
+- Use none when no logo is uploaded or UI is already visually dense
 `;
