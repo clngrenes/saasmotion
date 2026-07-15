@@ -159,6 +159,7 @@ ${MOTION_DIRECTOR_SKILL_GUIDE}
 
 TRANSFORM (camera / motion):
 - linear-style (Whip Zoom): fast snap zoom directly into the highlighted element, extreme easing — ALWAYS USE THIS for desktop or high-end products. It is the absolute best.
+- crash-zoom: hyper-aggressive, very fast zoom in. Best for CONVERSION funnel stage videos to emphasize speed.
 - zelios-style (Dolly): slow push-in, subtle Y swing — enterprise, calm, trustworthy
 - apple-style (3D Orbit): smooth isometric X+Y rotation — premium product demos (OpenAI style)
 - minimal-flat (Slide): flat slide-up, no rotation — playful, simple, mobile-first apps

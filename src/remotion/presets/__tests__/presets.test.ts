@@ -18,14 +18,18 @@ const ctx = (frame: number): PresetFrameContext => ({
 });
 
 describe("preset registry", () => {
-  it("registers exactly the three known presets with camera configs", () => {
+  it("registers all known presets with camera configs", () => {
     expect(Object.keys(PRESET_REGISTRY).sort()).toEqual([
       "apple-style",
+      "crash-zoom",
+      "linear-style",
       "minimal-flat",
       "zelios-style",
     ]);
     expect(Object.keys(PRESET_CAMERA_CONFIG).sort()).toEqual([
       "apple-style",
+      "crash-zoom",
+      "linear-style",
       "minimal-flat",
       "zelios-style",
     ]);

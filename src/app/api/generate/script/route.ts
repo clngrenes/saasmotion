@@ -6,6 +6,7 @@ import { trimProductContext } from "../../../../lib/ai/trim-product-context";
 const requestSchema = z.object({
   productDescription: z.string().min(10).max(4000),
   productContext: z.string().max(500_000).optional(),
+  funnelStage: z.enum(["awareness", "consideration", "conversion"]),
   screenshotNames: z.array(z.string().min(1)).min(1).max(8),
   screenshotUrls: z.array(z.string().url()).min(1).max(8).optional(),
   hasLogo: z.boolean().optional(),

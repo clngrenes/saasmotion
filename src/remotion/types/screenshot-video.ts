@@ -16,6 +16,7 @@ export const CAMERA_PRESET_NAMES = [
   "apple-style",
   "minimal-flat",
   "linear-style",
+  "crash-zoom",
 ] as const;
 
 export type CameraPresetName = (typeof CAMERA_PRESET_NAMES)[number];

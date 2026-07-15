@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { BACKGROUND_CSS } from "../../art-direction/catalog";
 import type { IntroMotionId, PanelVisualStyle } from "../../art-direction/catalog";
 import type { BackgroundStyleId } from "../../art-direction/catalog";
@@ -41,7 +41,7 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
   textPreset,
 }) => {
   const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const { width, height, fps } = useVideoConfig();
   const backgroundStyle = BACKGROUND_CSS[background];
 
   const uiTree = scene.uiTree!;
@@ -68,17 +68,29 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
   const frameH = screenH + bezel * 2;
   const cornerRadius = isPhone ? 36 : panelStyle?.cornerRadius === "high" ? 16 : 12;
 
-  const snapDuration = Math.min(45, durationInFrames * 0.3);
-  const snapProgress = interpolate(frame, [0, snapDuration], [0, 1], {
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-    extrapolateRight: "clamp",
+  // Critical Damping Spring Physics for snap zooms
+  // 14 damping and 120 stiffness ensures it snaps precisely into focus without wobbling
+  const snapProgress = spring({
+    frame,
+    fps,
+    config: {
+      damping: 14,
+      stiffness: 120,
+      mass: 1,
+    },
   });
 
   let targetScale = 1;
   let targetX = 0;
   let targetY = 0;
 
-  if (focusElement && presetName === "linear-style") {
+  if (focusElement && presetName === "crash-zoom") {
+    const cx = focusElement.bounds.x + focusElement.bounds.width / 2;
+    const cy = focusElement.bounds.y + focusElement.bounds.height / 2;
+    targetScale = 1.45;
+    targetX = (50 - cx) * 0.014 * screenW;
+    targetY = (50 - cy) * 0.014 * screenH - height * 0.05;
+  } else if (focusElement && presetName === "linear-style") {
     const cx = focusElement.bounds.x + focusElement.bounds.width / 2;
     const cy = focusElement.bounds.y + focusElement.bounds.height / 2;
     targetScale = 1.35;

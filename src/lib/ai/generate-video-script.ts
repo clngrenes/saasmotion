@@ -101,6 +101,7 @@ function toGeneratedVideoScript(
 function buildPrompt(input: {
   productDescription: string;
   productContext?: string;
+  funnelStage: "awareness" | "consideration" | "conversion";
   screenshotNames: readonly string[];
   hasVision: boolean;
   hasLogo: boolean;
@@ -113,6 +114,12 @@ function buildPrompt(input: {
   return `You are a creative director AND motion art director for premium SaaS launch videos (Apple, Linear, OpenAI).
 
 The user is a founder — they know their product, NOT motion design. You decide EVERYTHING visual and sonic: format, length, camera, text animation, music, SFX. They only upload screenshots and an optional brief.
+
+SALES FUNNEL STAGE: "${input.funnelStage.toUpperCase()}"
+Adapt the script and pacing to this funnel stage:
+- AWARENESS: Story-led, focus on universal pain points and curiosity. "Why should I care?" No deep UI details.
+- CONSIDERATION: Concrete UI walkthroughs, feature proof, comparison ("old way vs new way"). "How does it work?"
+- CONVERSION: High urgency, metrics, proof of ROI, fast pacing. Direct CTA (Sign up, Free trial). "I need this now."
 
 Write a short, punchy promo script in English AND choose the complete creative direction from the skill catalog below.
 
@@ -135,7 +142,7 @@ ART DIRECTION RULES:
 - aspectRatio: ${input.requestedAspectRatio ? `MUST USE "${input.requestedAspectRatio}"` : "infer from screenshot shape and product type (mobile app → 9:16, desktop SaaS → 16:9)"}
 - durationInFrames: ${input.requestedDuration ? `MUST USE "${input.requestedDuration}". Since the user locked this duration, if it's long (e.g. 1800+) but screenshot count is low, you MUST write rich, engaging, multi-part story copy to fill the time!` : "match screenshot count — 1–2 screens → \"900\", 3–4 → \"1800\", 5–6 → \"2700\", 7+ → \"3600\" (string values)"}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
-- ALWAYS prefer "linear-style" for cameraPreset unless it's a very simple mobile app. Linear-style provides the best whip-zoom motion.
+- cameraPreset: use "crash-zoom" for CONVERSION funnel stage (fast, aggressive). Otherwise prefer "linear-style" for desktop/high-end products. Use "minimal-flat" only for very simple mobile apps.
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
 - Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)
@@ -166,6 +173,7 @@ ${context ? `Product context (env/README/package — may contain secrets, do not
 export async function generateVideoScript(input: {
   productDescription: string;
   productContext?: string;
+  funnelStage: "awareness" | "consideration" | "conversion";
   screenshotNames: readonly string[];
   screenshotUrls?: readonly string[];
   hasLogo?: boolean;
@@ -185,6 +193,7 @@ export async function generateVideoScript(input: {
   const prompt = buildPrompt({
     productDescription: input.productDescription,
     productContext: input.productContext,
+    funnelStage: input.funnelStage,
     screenshotNames: input.screenshotNames,
     hasVision,
     hasLogo: input.hasLogo ?? false,

@@ -8,12 +8,18 @@ interface ReconstructedUIRootProps {
   readonly localDuration: number;
 }
 
+function containsId(element: UIElement, id: string): boolean {
+  if (element.id === id) return true;
+  if (!element.children) return false;
+  return element.children.some((child) => containsId(child, id));
+}
+
 function elementStyle(
   element: UIElement,
-  focusElementId: string | undefined,
+  isFocused: boolean,
   focusProgress: number,
+  dofBlur: number,
 ): React.CSSProperties {
-  const isFocused = focusElementId === element.id;
   const focusScale = isFocused ? 1 + focusProgress * 0.04 : 1;
   const focusLift = isFocused ? -focusProgress * 6 : 0;
   const focusShadow = isFocused
@@ -45,6 +51,7 @@ function elementStyle(
     boxSizing: "border-box",
     transform: `scale(${focusScale}) translateY(${focusLift}px)`,
     boxShadow: focusShadow,
+    filter: dofBlur > 0 ? `blur(${dofBlur}px)` : undefined,
     zIndex: isFocused ? 10 : element.type === "card" ? 2 : 1,
     transition: "none",
     fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -58,8 +65,18 @@ function renderElement(
   element: UIElement,
   focusElementId: string | undefined,
   focusProgress: number,
+  isParentBlurred = false,
 ): React.ReactNode {
-  const style = elementStyle(element, focusElementId, focusProgress);
+  const isFocused = focusElementId === element.id;
+  const isTargetActive = Boolean(focusElementId);
+  const containsFocus = focusElementId ? containsId(element, focusElementId) : false;
+  
+  // Apply Depth of Field blur to elements that are NOT the focus element and do NOT contain it.
+  // Prevent stacking by not blurring if parent is already blurred.
+  const shouldBlur = isTargetActive && !containsFocus && !isParentBlurred;
+  const dofBlur = shouldBlur ? focusProgress * 2 : 0;
+
+  const style = elementStyle(element, isFocused, focusProgress, dofBlur);
 
   if (element.type === "progress") {
     const fill = element.content ?? "50";
@@ -84,7 +101,7 @@ function renderElement(
         <span style={{ width: "100%", textAlign: "inherit" }}>{element.content}</span>
       )}
       {element.children?.map((child) =>
-        renderElement(child, focusElementId, focusProgress),
+        renderElement(child, focusElementId, focusProgress, isParentBlurred || shouldBlur),
       )}
     </div>
   );

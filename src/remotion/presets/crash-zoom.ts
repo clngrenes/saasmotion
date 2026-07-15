@@ -2,24 +2,24 @@ import { Easing, interpolate } from "remotion";
 import type { PresetComputeFn, Vec3 } from "../types/screenshot-video";
 import { interpolateVec3 } from "./shared";
 
-// Custom Cubic Bezier for asymmetrical, delayed start with snappy zoom
-const SNAP_EASING = Easing.bezier(0.62, 0.28, 0.23, 0.99);
+// Hyper-aggressive Crash Zoom (very fast, extreme easing)
+const SNAP_EASING = Easing.bezier(0.85, 0, 0.15, 1);
 
-const START_CAM_Z = 7.0;
-const ZOOM_CAM_Z = 3.6;
+const START_CAM_Z = 9.0; // Starts further back
+const ZOOM_CAM_Z = 3.0;  // Zooms in closer
 
-const START_ROTATION: Vec3 = [0.35, -0.4, 0.05];
+const START_ROTATION: Vec3 = [0.45, -0.6, 0.1];
 const END_ROTATION: Vec3 = [0, 0, 0];
 
 const WORLD_WIDTH = 6.0;
 const WORLD_HEIGHT = 4.5;
 
-export const computeLinearStyle: PresetComputeFn = ({
+export const computeCrashZoomStyle: PresetComputeFn = ({
   frame,
   durationInFrames,
 }) => {
-  // Snap zoom takes ~45 frames (1.5 seconds)
-  const snapDuration = Math.min(45, durationInFrames * 0.3);
+  // Snap zoom takes ~25 frames (very fast)
+  const snapDuration = Math.min(25, durationInFrames * 0.2);
   const snapProgress = interpolate(frame, [0, snapDuration], [0, 1], {
     easing: SNAP_EASING,
     extrapolateRight: "clamp",

@@ -33,6 +33,7 @@ const PRESET_LABELS: Record<CameraPresetName, string> = {
   "apple-style": "3D Orbit",
   "minimal-flat": "Slide",
   "linear-style": "Whip Zoom",
+  "crash-zoom": "Crash Zoom",
 };
 
 export const StyleControls: React.FC<StyleControlsProps> = ({

@@ -107,6 +107,7 @@ export default function PreviewPage() {
 
   const [productDescription, setProductDescription] = useState("");
   const [productContext, setProductContext] = useState("");
+  const [funnelStage, setFunnelStage] = useState<"awareness" | "consideration" | "conversion">("awareness");
   const [productName, setProductName] = useState("Your app");
   const [tagline, setTagline] = useState("Upload screenshots — we handle the rest");
   const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
@@ -295,6 +296,7 @@ export default function PreviewPage() {
       body: JSON.stringify({
         productDescription: description,
         productContext: productContext || undefined,
+        funnelStage,
         screenshotNames: items.map((i) => i.file.name),
         screenshotUrls: urls,
         hasLogo: Boolean(logoUrl),
@@ -309,7 +311,7 @@ export default function PreviewPage() {
     const data = (await res.json()) as GeneratedVideoScript;
     applyScriptToState(data);
     return data;
-  }, [applyScriptToState, items, productContext, productDescription, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
+  }, [applyScriptToState, items, productContext, productDescription, funnelStage, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
 
   const handleLogoSelected = useCallback(async (file: File) => {
     setLogoError(null);
@@ -574,12 +576,17 @@ export default function PreviewPage() {
             <BriefForm
               description={productDescription}
               contextLoaded={productContext.length > 0}
+              funnelStage={funnelStage}
               onDescriptionChange={(value) => {
                 setProductDescription(value);
                 setPreviewReady(false);
               }}
               onContextLoad={(value) => {
                 setProductContext(value);
+                setPreviewReady(false);
+              }}
+              onFunnelStageChange={(value) => {
+                setFunnelStage(value);
                 setPreviewReady(false);
               }}
             />
