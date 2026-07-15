@@ -2,6 +2,7 @@ import type { GeneratedVideoScript } from "../../types/video-script";
 import type { ArtDirection } from "../../remotion/art-direction/catalog";
 import type { AudioDirection } from "../../remotion/constants/audio-catalog";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
+import type { UIReconstruction } from "../../types/ui-reconstruction";
 import { generatedArtDirectionToArtDirection } from "./art-direction";
 import {
   generatedAudioDirectionToAudioDirection,
@@ -20,7 +21,11 @@ export type ScriptRenderConfig = {
 export function scriptToRenderConfig(
   script: GeneratedVideoScript,
   screenshotUrls: readonly string[],
-  options?: { readonly logoUrl?: string; readonly previewAudio?: boolean },
+  options?: {
+    readonly logoUrl?: string;
+    readonly previewAudio?: boolean;
+    readonly uiTrees?: readonly (UIReconstruction | null | undefined)[];
+  },
 ): ScriptRenderConfig {
   const art = generatedArtDirectionToArtDirection(
     script.artDirection,
@@ -38,7 +43,7 @@ export function scriptToRenderConfig(
     : shouldEnableAudio(audio);
 
   const props = buildVideoProps({
-    scenes: mergeScenesWithCopy(screenshotUrls, script.scenes),
+    scenes: mergeScenesWithCopy(screenshotUrls, script.scenes, options?.uiTrees),
     productName: script.productName,
     tagline: script.tagline,
     presetName: art.cameraPreset,

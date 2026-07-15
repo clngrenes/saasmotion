@@ -36,14 +36,7 @@ const scriptSchema = z.object({
     z.object({
       headline: z.string().min(1).max(100),
       subline: z.string().max(180),
-      highlightBox: z
-        .object({
-          x: z.number().min(0).max(100),
-          y: z.number().min(0).max(100),
-          width: z.number().min(0).max(100),
-          height: z.number().min(0).max(100),
-        })
-        .optional(),
+      focusElementId: z.string().max(40).optional(),
     }),
   ),
   artDirection: z.object({
@@ -125,7 +118,7 @@ ${input.hasVision ? "You can SEE each screenshot image below — study the UI ca
 COPY RULES:
 - Exactly ${sceneCount} scenes — one per screenshot, in upload order
 - Each headline/subline MUST match what is visible on that specific screenshot
-- IMPORTANT: If you can SEE the screenshots (hasVision is true), identify the single most prominent UI element (a modal, a floating card, or a central panel) and return its \`highlightBox\` coordinates in PERCENTAGES (0 to 100). x/y is top-left. E.g. x: 25, y: 25, width: 50, height: 50. If there is no clear prominent element to lift, omit highlightBox.
+- focusElementId: optional — pick the most prominent UI layer id when focusableIds are provided in a later step; omit if unknown
 - Cross-check with product context (.env/README) — do not contradict the product
 - Do not invent features, screens, or data that are not visible or documented
 - Headlines: short, benefit-driven
@@ -142,7 +135,6 @@ ${input.requestedAspectRatio ? `- USER REQUESTED ASPECT RATIO: MUST USE "${input
 ${input.requestedDuration ? `- USER REQUESTED DURATION: MUST USE "${input.requestedDuration}". If duration is long (e.g. 1800+) but screenshot count is low, write rich, engaging, multi-part story copy to fill the time!` : ""}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - ALWAYS prefer "linear-style" for cameraPreset unless it's a very simple mobile app. Linear-style provides the best whip-zoom motion.
-- IMPORTANT: When returning \`highlightBox\` coordinates, ONLY highlight cleanly separated floating cards, completely detached modals, or very distinct completely isolated UI blocks. DO NOT highlight rows in a list, text blocks, or merged UI sections, because they will be cut out as a sharp rectangle and look terrible. If there's no perfectly isolated floating element, omit \`highlightBox\`.
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
 - Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)

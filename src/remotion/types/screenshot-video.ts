@@ -34,7 +34,6 @@ export interface PresetFrameContext {
   readonly frame: number;
   readonly durationInFrames: number;
   readonly fps: number;
-  readonly highlightBox?: BoundingBox;
 }
 
 /**
@@ -49,13 +48,16 @@ export interface PresetFrameOutput {
 /** Signatur aller Preset-Funktionen — pure, testbar, kein React */
 export type PresetComputeFn = (ctx: PresetFrameContext) => PresetFrameOutput;
 
-import type { BoundingBox } from "../../types/video-script";
+import type { UIReconstruction } from "../../types/ui-reconstruction";
 
 export type VideoScene = {
   readonly screenshotUrl: string;
   readonly headline: string;
   readonly subline: string;
-  readonly highlightBox?: BoundingBox;
+  /** Rebuilt UI layer tree — enables real component animation without dim/crop */
+  readonly uiTree?: UIReconstruction;
+  /** Element id inside uiTree to focus-animate for this scene */
+  readonly focusElementId?: string;
 };
 
 /**

@@ -10,6 +10,7 @@ import type { TextPresetId } from "../text-presets/catalog";
 import type { CameraPresetName, FrameStyleId, VideoScene } from "../types/screenshot-video";
 import { DeviceFrameMesh } from "./DeviceFrameMesh";
 import { WindowFrameMesh } from "./WindowFrameMesh";
+import { ReconstructedSceneSlide } from "./reconstructed/ReconstructedSceneSlide";
 import { SceneHeadline } from "./SceneHeadline";
 import { SuspenseLoader } from "./SuspenseLoader";
 import {
@@ -29,16 +30,22 @@ type SceneSlideProps = {
   readonly textPreset: TextPresetId;
 };
 
-export const SceneSlide: React.FC<SceneSlideProps> = ({
-  scene,
-  durationInFrames,
-  presetName,
-  frameStyle,
-  background,
-  panelStyle,
-  introMotion,
-  textPreset,
-}) => {
+export const SceneSlide: React.FC<SceneSlideProps> = (props) => {
+  if (props.scene.uiTree) {
+    return <ReconstructedSceneSlide {...props} />;
+  }
+
+  const {
+    scene,
+    durationInFrames,
+    presetName,
+    frameStyle,
+    background,
+    panelStyle,
+    introMotion,
+    textPreset,
+  } = props;
+
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const backgroundStyle = BACKGROUND_CSS[background];
@@ -47,7 +54,6 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     frame,
     durationInFrames,
     fps,
-    highlightBox: scene.highlightBox,
   }).mesh;
 
   const mesh = applyIntroMotion(baseMesh, introMotion, frame);
@@ -57,7 +63,6 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
     frame,
     durationInFrames,
     fps,
-    highlightBox: scene.highlightBox,
   }).camera;
 
   const cameraProps = useMemo(
@@ -98,14 +103,12 @@ export const SceneSlide: React.FC<SceneSlideProps> = ({
               rotation={mesh.rotation}
               panelStyle={panelStyle}
               opacity={meshOpacity}
-              highlightBox={scene.highlightBox}
             />
           ) : (
             <DeviceFrameMesh
               screenshotUrl={scene.screenshotUrl}
               position={mesh.position}
               rotation={mesh.rotation}
-              highlightBox={scene.highlightBox}
             />
           )}
         </SuspenseLoader>

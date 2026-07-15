@@ -29,6 +29,7 @@ import type {
 import type { CameraPresetName, VideoScene } from "../../remotion/types/screenshot-video";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
 import type { GeneratedSceneCopy } from "../../types/video-script";
+import type { UIReconstruction } from "../../types/ui-reconstruction";
 
 export function buildDefaultSceneCopy(
   index: number,
@@ -50,14 +51,21 @@ export function buildDefaultSceneCopy(
 export function mergeScenesWithCopy(
   screenshotUrls: readonly string[],
   copy: readonly GeneratedSceneCopy[],
+  uiTrees?: readonly (UIReconstruction | null | undefined)[],
 ): VideoScene[] {
   return screenshotUrls.map((screenshotUrl, index) => {
     const sceneCopy = copy[index] ?? buildDefaultSceneCopy(index, screenshotUrls.length);
+    const uiTree = uiTrees?.[index] ?? undefined;
+    const focusElementId =
+      sceneCopy.focusElementId ??
+      (uiTree?.focusableIds[0] ?? undefined);
+
     return {
       screenshotUrl,
       headline: sceneCopy.headline,
       subline: sceneCopy.subline,
-      highlightBox: sceneCopy.highlightBox,
+      uiTree: uiTree ?? undefined,
+      focusElementId,
     };
   });
 }

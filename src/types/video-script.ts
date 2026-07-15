@@ -9,7 +9,8 @@ export type BoundingBox = {
 export type GeneratedSceneCopy = {
   readonly headline: string;
   readonly subline: string;
-  readonly highlightBox?: BoundingBox;
+  /** ID from uiTree.focusableIds — which layer to animate for this scene */
+  readonly focusElementId?: string;
 };
 
 export type GeneratedArtDirection = {

@@ -38,6 +38,7 @@ import type { CameraPresetName, FrameStyleId } from "../remotion/types/screensho
 import type { RenderStatus } from "../types/render-job";
 import type { ScreenshotItem } from "../types/screenshot";
 import type { GeneratedSceneCopy, GeneratedVideoScript } from "../types/video-script";
+import type { UIReconstruction } from "../types/ui-reconstruction";
 
 const DEFAULT_PREVIEW_URLS = [
   "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=900&h=1950&fit=crop",
@@ -73,6 +74,31 @@ async function uploadScreenshot(file: File): Promise<string> {
   return data.url;
 }
 
+async function reconstructScreenshots(
+  urls: readonly string[],
+  names: readonly string[],
+): Promise<(UIReconstruction | null)[]> {
+  return Promise.all(
+    urls.map(async (url, index) => {
+      try {
+        const res = await fetch("/api/reconstruct/screenshot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            screenshotUrl: url,
+            screenshotName: names[index] ?? `screen-${index + 1}`,
+          }),
+        });
+        if (!res.ok) return null;
+        const data = (await res.json()) as { uiTree: UIReconstruction };
+        return data.uiTree;
+      } catch {
+        return null;
+      }
+    }),
+  );
+}
+
 export default function PreviewPage() {
   const [items, setItems] = useState<ScreenshotItem[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<(string | null)[]>([]);
@@ -102,6 +128,7 @@ export default function PreviewPage() {
     useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
   const [artDirection, setArtDirection] = useState<ArtDirection | null>(null);
   const [audioDirection, setAudioDirection] = useState<AudioDirection | null>(null);
+  const [uiTrees, setUiTrees] = useState<(UIReconstruction | null)[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
 
   const [isRendering, setIsRendering] = useState(false);
@@ -206,7 +233,7 @@ export default function PreviewPage() {
   const playerInputProps = useMemo(
     () =>
       buildVideoProps({
-        scenes: mergeScenesWithCopy(previewUrls, effectiveSceneCopy),
+        scenes: mergeScenesWithCopy(previewUrls, effectiveSceneCopy, uiTrees),
         productName: productName || "Your app",
         tagline,
         presetName,
@@ -219,7 +246,7 @@ export default function PreviewPage() {
         artDirection: artDirection ?? undefined,
         audioDirection: audioDirection ?? undefined,
       }),
-    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, logoUrl, frameStyle, artDirection, audioDirection],
+    [previewUrls, effectiveSceneCopy, productName, tagline, presetName, durationInFrames, aspectRatio, textPreset, logoUrl, frameStyle, artDirection, audioDirection, uiTrees],
   );
 
   const applyScriptToState = useCallback((data: GeneratedVideoScript) => {
@@ -407,50 +434,60 @@ export default function PreviewPage() {
 
     try {
       let script: GeneratedVideoScript;
-      if (
-        previewReady &&
-        artDirection &&
-        audioDirection &&
-        sceneCopy.length === items.length
-      ) {
-        script = {
-          productName,
-          tagline,
-          scenes: sceneCopy,
-          artDirection: {
-            reasoning: artDirection.reasoning,
-            cameraPreset: artDirection.cameraPreset,
-            frameStyle: artDirection.frameStyle,
-            textPreset: artDirection.textPreset,
-            aspectRatio: artDirection.aspectRatio,
-            durationInFrames: artDirection.durationInFrames,
-            background: artDirection.background,
-            effects: artDirection.effects,
-            style: artDirection.style,
-            introMotion: artDirection.introMotion,
-            sceneTransition: artDirection.sceneTransition,
-            logoIntroMotion: artDirection.logoIntroMotion,
-            logoIntroBackdrop: artDirection.logoIntroBackdrop,
-            svgMotion: artDirection.svgMotion,
-            svgAccent: artDirection.svgAccent,
-          },
-          audioDirection: {
-            reasoning: audioDirection.reasoning,
-            musicStyle: audioDirection.musicStyle,
-            musicVolume: audioDirection.musicVolume,
-            transitionSfx: audioDirection.transitionSfx,
-            sfxVolume: audioDirection.sfxVolume,
-            playIntroRevealSfx: audioDirection.playIntroRevealSfx,
-          },
-        };
-      } else {
-        script = await generateScript();
-      }
+      const names = items.map((i) => i.file.name);
+
+      const [scriptOrNull, trees] = await Promise.all([
+        (async () => {
+          if (
+            previewReady &&
+            artDirection &&
+            audioDirection &&
+            sceneCopy.length === items.length
+          ) {
+            return {
+              productName,
+              tagline,
+              scenes: sceneCopy,
+              artDirection: {
+                reasoning: artDirection.reasoning,
+                cameraPreset: artDirection.cameraPreset,
+                frameStyle: artDirection.frameStyle,
+                textPreset: artDirection.textPreset,
+                aspectRatio: artDirection.aspectRatio,
+                durationInFrames: artDirection.durationInFrames,
+                background: artDirection.background,
+                effects: artDirection.effects,
+                style: artDirection.style,
+                introMotion: artDirection.introMotion,
+                sceneTransition: artDirection.sceneTransition,
+                logoIntroMotion: artDirection.logoIntroMotion,
+                logoIntroBackdrop: artDirection.logoIntroBackdrop,
+                svgMotion: artDirection.svgMotion,
+                svgAccent: artDirection.svgAccent,
+              },
+              audioDirection: {
+                reasoning: audioDirection.reasoning,
+                musicStyle: audioDirection.musicStyle,
+                musicVolume: audioDirection.musicVolume,
+                transitionSfx: audioDirection.transitionSfx,
+                sfxVolume: audioDirection.sfxVolume,
+                playIntroRevealSfx: audioDirection.playIntroRevealSfx,
+              },
+            } satisfies GeneratedVideoScript;
+          }
+          return generateScript();
+        })(),
+        reconstructScreenshots(urls, names),
+      ]);
+
+      script = scriptOrNull;
+      setUiTrees(trees);
 
       setExportPhase("queued");
 
       const { props } = scriptToRenderConfig(script, urls, {
         logoUrl: logoUrl ?? undefined,
+        uiTrees: trees,
       });
 
       const res = await fetch("/api/render/enqueue", {
@@ -477,7 +514,7 @@ export default function PreviewPage() {
   const isExporting = exportPhase !== "idle" && exportPhase !== "done" && exportPhase !== "failed";
 
   const statusLine = isExporting && exportPhase === "script"
-    ? "Writing your script…"
+    ? "Rebuilding UI layers from screenshots…"
     : previewReady
       ? "Ready to create"
       : items.length > 0
