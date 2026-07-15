@@ -7,6 +7,7 @@ import type { TextPresetId } from "../../text-presets/catalog";
 import type { CameraPresetName, FrameStyleId, VideoScene } from "../../types/screenshot-video";
 import type { UIElement } from "../../../types/ui-reconstruction";
 import { applyIntroMotion, getIntroOpacity } from "../../art-direction/intro-motion";
+import { computeSceneTypographyLayout } from "../../lib/scene-layout";
 import { SceneHeadline } from "../SceneHeadline";
 import { ReconstructedUIRoot } from "./ReconstructedUIRoot";
 
@@ -43,6 +44,7 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const backgroundStyle = BACKGROUND_CSS[background];
+  const layout = computeSceneTypographyLayout(width, height, background);
 
   const uiTree = scene.uiTree!;
   const focusId = scene.focusElementId ?? uiTree.focusableIds[0];
@@ -54,14 +56,21 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
 
   const isPhone = frameStyle === "phone";
   const screenAspect = uiTree.width / uiTree.height;
-  const maxScreenHeight = height * (isPhone ? 0.72 : 0.68);
-  const maxScreenWidth = width * (isPhone ? 0.42 : 0.62);
+  const maxScreenHeight = height * (isPhone ? layout.maxUiHeightRatio * 0.95 : layout.maxUiHeightRatio);
+  const maxScreenWidth = width * (isPhone ? Math.min(0.48, layout.maxUiWidthRatio) : layout.maxUiWidthRatio);
   let screenW = maxScreenWidth;
   let screenH = screenW / screenAspect;
   if (screenH > maxScreenHeight) {
     screenH = maxScreenHeight;
     screenW = screenH * screenAspect;
   }
+
+  // Nudge UI away from the text band so whip-zoom never covers copy
+  const textBandPx = height * layout.textBandRatio;
+  const uiBandOffsetY =
+    layout.textPlacement === "bottom"
+      ? -textBandPx * 0.22
+      : textBandPx * 0.18;
 
   const bezel = isPhone ? 14 : 8;
   const frameW = screenW + bezel * 2;
@@ -87,21 +96,21 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
   if (focusElement && presetName === "crash-zoom") {
     const cx = focusElement.bounds.x + focusElement.bounds.width / 2;
     const cy = focusElement.bounds.y + focusElement.bounds.height / 2;
-    targetScale = 1.45;
-    targetX = (50 - cx) * 0.014 * screenW;
-    targetY = (50 - cy) * 0.014 * screenH - height * 0.05;
+    targetScale = 1.35;
+    targetX = (50 - cx) * 0.012 * screenW;
+    targetY = (50 - cy) * 0.012 * screenH;
   } else if (focusElement && presetName === "linear-style") {
     const cx = focusElement.bounds.x + focusElement.bounds.width / 2;
     const cy = focusElement.bounds.y + focusElement.bounds.height / 2;
-    targetScale = 1.35;
-    targetX = (50 - cx) * 0.012 * screenW;
-    targetY = (50 - cy) * 0.012 * screenH - height * 0.04;
+    targetScale = 1.28;
+    targetX = (50 - cx) * 0.01 * screenW;
+    targetY = (50 - cy) * 0.01 * screenH;
   } else if (focusElement) {
     const cx = focusElement.bounds.x + focusElement.bounds.width / 2;
     const cy = focusElement.bounds.y + focusElement.bounds.height / 2;
-    targetScale = 1.15;
-    targetX = (50 - cx) * 0.008 * screenW;
-    targetY = (50 - cy) * 0.008 * screenH;
+    targetScale = 1.12;
+    targetX = (50 - cx) * 0.007 * screenW;
+    targetY = (50 - cy) * 0.007 * screenH;
   }
 
   const scale = interpolate(snapProgress, [0, 1], [1, targetScale]);
@@ -135,7 +144,7 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
           alignItems: "center",
           justifyContent: "center",
           opacity: introOpacity,
-          transform: `scale(${introScale})`,
+          transform: `translateY(${uiBandOffsetY}px) scale(${introScale})`,
         }}
       >
         <div
@@ -179,6 +188,7 @@ export const ReconstructedSceneSlide: React.FC<ReconstructedSceneSlideProps> = (
         localFrame={frame}
         localDuration={durationInFrames}
         textPreset={textPreset}
+        background={background}
       />
     </AbsoluteFill>
   );

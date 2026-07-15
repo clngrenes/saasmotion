@@ -120,6 +120,7 @@ export const SceneSlide: React.FC<SceneSlideProps> = (props) => {
         localFrame={frame}
         localDuration={durationInFrames}
         textPreset={textPreset}
+        background={background}
       />
     </AbsoluteFill>
   );
