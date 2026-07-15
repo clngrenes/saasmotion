@@ -28,6 +28,7 @@ import {
 import type { GeneratedVideoScript } from "../../types/video-script";
 import { scriptModel } from "./google";
 import { trimProductContext } from "./trim-product-context";
+import { getStylePack, type StylePackId } from "../../remotion/styles/catalog";
 
 const scriptSchema = z.object({
   productName: z.string().min(1).max(60),
@@ -67,9 +68,9 @@ const scriptSchema = z.object({
   audioDirection: z.object({
     reasoning: z.string().min(1).max(300),
     musicStyle: z.enum(MUSIC_STYLE_IDS),
-    musicVolume: z.number().min(0.08).max(0.28),
+    musicVolume: z.number().min(0.28).max(0.55),
     transitionSfx: z.enum(SFX_STYLE_IDS),
-    sfxVolume: z.number().min(0.18).max(0.45),
+    sfxVolume: z.number().min(0.24).max(0.5),
     playIntroRevealSfx: z.boolean(),
   }),
 });
@@ -102,6 +103,7 @@ function buildPrompt(input: {
   productDescription: string;
   productContext?: string;
   funnelStage: "awareness" | "consideration" | "conversion";
+  stylePackId?: StylePackId;
   screenshotNames: readonly string[];
   hasVision: boolean;
   hasLogo: boolean;
@@ -110,11 +112,32 @@ function buildPrompt(input: {
 }): string {
   const sceneCount = Math.max(1, input.screenshotNames.length);
   const context = trimProductContext(input.productContext);
+  const pack = getStylePack(input.stylePackId ?? "auto");
+  const styleLockBlock = pack.locks
+    ? `
+STYLE PACK LOCKED: "${pack.label}" (reference: ${pack.referenceUrl ?? "n/a"})
+The founder chose this pack. You MUST use these artDirection + audioDirection values exactly:
+- cameraPreset: "${pack.locks.cameraPreset}"
+- frameStyle: "${pack.locks.frameStyle}"
+- textPreset: "${pack.locks.textPreset}"
+- background: "${pack.locks.background}"
+- introMotion: "${pack.locks.introMotion}"
+- sceneTransition: "${pack.locks.sceneTransition}"
+- logoIntroMotion: "${pack.locks.logoIntroMotion}"
+- logoIntroBackdrop: "${pack.locks.logoIntroBackdrop}"
+- svgMotion: ${input.hasLogo ? `"${pack.locks.svgMotion}"` : `"none"`}
+- musicStyle: "${pack.locks.audio.musicStyle}"
+- musicVolume: ${pack.locks.audio.musicVolume}
+- transitionSfx: "${pack.locks.audio.transitionSfx}"
+- sfxVolume: ${pack.locks.audio.sfxVolume}
+Focus on COPY and pacing for a ${pack.locks.durationInFrames / 30}s ${pack.locks.aspectRatio} premium SaaS demo. Do not invent a different look.
+`
+    : "";
 
   return `You are a creative director AND motion art director for premium SaaS launch videos (Apple, Linear, OpenAI).
 
 The user is a founder — they know their product, NOT motion design. You decide EVERYTHING visual and sonic: format, length, camera, text animation, music, SFX. They only upload screenshots and an optional brief.
-
+${styleLockBlock}
 SALES FUNNEL STAGE: "${input.funnelStage.toUpperCase()}"
 Adapt the script and pacing to this funnel stage:
 - AWARENESS: Story-led, focus on universal pain points and curiosity. "Why should I care?" No deep UI details.
@@ -157,7 +180,7 @@ AUDIO RULES:
 - musicStyle: almost always cinematic or tech — NEVER none unless solid-white keynote
 - transitionSfx is auto-matched to sceneTransition on our side — pick whoosh for slides/wipes, soft for fades
 - playIntroRevealSfx: true ONLY when logo is uploaded; false when no logo
-- musicVolume 0.15–0.22, sfxVolume 0.24–0.36
+- musicVolume 0.35–0.48, sfxVolume 0.30–0.42
 ${input.hasLogo ? "" : "- No logo → playIntroRevealSfx MUST be false"}
 
 ${AUDIO_SKILL_GUIDE}
@@ -175,6 +198,7 @@ export async function generateVideoScript(input: {
   productDescription: string;
   productContext?: string;
   funnelStage: "awareness" | "consideration" | "conversion";
+  stylePackId?: StylePackId;
   screenshotNames: readonly string[];
   screenshotUrls?: readonly string[];
   hasLogo?: boolean;
@@ -190,16 +214,20 @@ export async function generateVideoScript(input: {
   const sceneCount = Math.max(1, input.screenshotNames.length);
   const visionUrls = (input.screenshotUrls ?? []).filter(Boolean);
   const hasVision = visionUrls.length === sceneCount;
+  const pack = getStylePack(input.stylePackId ?? "auto");
+  const lockedDuration = pack.locks?.durationInFrames ?? input.requestedDuration;
+  const lockedAspect = pack.locks?.aspectRatio ?? input.requestedAspectRatio;
 
   const prompt = buildPrompt({
     productDescription: input.productDescription,
     productContext: input.productContext,
     funnelStage: input.funnelStage,
+    stylePackId: input.stylePackId,
     screenshotNames: input.screenshotNames,
     hasVision,
     hasLogo: input.hasLogo ?? false,
-    requestedDuration: input.requestedDuration,
-    requestedAspectRatio: input.requestedAspectRatio,
+    requestedDuration: lockedDuration,
+    requestedAspectRatio: lockedAspect,
   });
 
   const imageParts = hasVision
@@ -231,10 +259,10 @@ export async function generateVideoScript(input: {
     return toGeneratedVideoScript(
       { ...object, scenes: scenes.slice(0, sceneCount) },
       sceneCount,
-      input.requestedDuration,
-      input.requestedAspectRatio,
+      lockedDuration,
+      lockedAspect,
     );
   }
 
-  return toGeneratedVideoScript(object, sceneCount, input.requestedDuration, input.requestedAspectRatio);
+  return toGeneratedVideoScript(object, sceneCount, lockedDuration, lockedAspect);
 }

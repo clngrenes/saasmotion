@@ -7,11 +7,20 @@ import { BriefForm } from "../components/studio/BriefForm";
 import { ExportProgressPanel, type ExportPhase } from "../components/studio/ExportProgressPanel";
 import { LogoDropzone } from "../components/studio/LogoDropzone";
 import { FormatLengthSelector } from "../components/studio/FormatLengthSelector";
+import { StylePackPicker } from "../components/studio/StylePackPicker";
 import { StudioSection } from "../components/studio/StudioSection";
 import {
   DEFAULT_TEXT_PRESET,
   type TextPresetId,
 } from "../remotion/text-presets/catalog";
+import {
+  DEFAULT_STYLE_PACK,
+  getStylePack,
+  type StylePackId,
+} from "../remotion/styles/catalog";
+import {
+  applyStylePackToAudioDirection,
+} from "../remotion/styles/catalog";
 import {
   DEFAULT_VIDEO_DURATION_FRAMES,
   type VideoDurationFrames,
@@ -108,6 +117,7 @@ export default function PreviewPage() {
   const [productDescription, setProductDescription] = useState("");
   const [productContext, setProductContext] = useState("");
   const [funnelStage, setFunnelStage] = useState<"awareness" | "consideration" | "conversion">("awareness");
+  const [stylePackId, setStylePackId] = useState<StylePackId>(DEFAULT_STYLE_PACK);
   const [productName, setProductName] = useState("Your app");
   const [tagline, setTagline] = useState("Upload screenshots — we handle the rest");
   const [sceneCopy, setSceneCopy] = useState<GeneratedSceneCopy[]>([]);
@@ -119,14 +129,24 @@ export default function PreviewPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  const [presetName, setPresetName] = useState<CameraPresetName>("apple-style");
-  const [frameStyle, setFrameStyle] = useState<FrameStyleId>("window");
+  const [presetName, setPresetName] = useState<CameraPresetName>(
+    getStylePack(DEFAULT_STYLE_PACK).locks?.cameraPreset ?? "linear-style",
+  );
+  const [frameStyle, setFrameStyle] = useState<FrameStyleId>(
+    getStylePack(DEFAULT_STYLE_PACK).locks?.frameStyle ?? "window",
+  );
   const [aspectRatio, setAspectRatio] =
-    useState<VideoAspectRatioId>(DEFAULT_VIDEO_ASPECT_RATIO);
+    useState<VideoAspectRatioId>(
+      getStylePack(DEFAULT_STYLE_PACK).locks?.aspectRatio ?? DEFAULT_VIDEO_ASPECT_RATIO,
+    );
   const [textPreset, setTextPreset] =
-    useState<TextPresetId>(DEFAULT_TEXT_PRESET);
+    useState<TextPresetId>(
+      getStylePack(DEFAULT_STYLE_PACK).locks?.textPreset ?? DEFAULT_TEXT_PRESET,
+    );
   const [durationInFrames, setDurationInFrames] =
-    useState<VideoDurationFrames>(DEFAULT_VIDEO_DURATION_FRAMES);
+    useState<VideoDurationFrames>(
+      getStylePack(DEFAULT_STYLE_PACK).locks?.durationInFrames ?? DEFAULT_VIDEO_DURATION_FRAMES,
+    );
   const [artDirection, setArtDirection] = useState<ArtDirection | null>(null);
   const [audioDirection, setAudioDirection] = useState<AudioDirection | null>(null);
   const [uiTrees, setUiTrees] = useState<(UIReconstruction | null)[]>([]);
@@ -254,13 +274,18 @@ export default function PreviewPage() {
     const directed = generatedArtDirectionToArtDirection(
       data.artDirection,
       data.scenes.length,
+      stylePackId,
     );
-    const audio = normalizeAudioDirection(
-      generatedAudioDirectionToAudioDirection(data.audioDirection),
-      {
-        hasLogo: Boolean(logoUrl),
-        sceneTransition: directed.sceneTransition,
-      },
+    const audio = applyStylePackToAudioDirection(
+      normalizeAudioDirection(
+        generatedAudioDirectionToAudioDirection(data.audioDirection),
+        {
+          hasLogo: Boolean(logoUrl),
+          sceneTransition: directed.sceneTransition,
+        },
+      ),
+      stylePackId,
+      Boolean(logoUrl),
     );
     setProductName(data.productName);
     setTagline(data.tagline);
@@ -276,7 +301,7 @@ export default function PreviewPage() {
     setAudioDirection(audio);
     setPreviewReady(true);
     return { directed, audio };
-  }, [logoUrl]);
+  }, [logoUrl, stylePackId]);
 
   const generateScript = useCallback(async () => {
     const urls = uploadedUrls.filter((u): u is string => Boolean(u));
@@ -297,6 +322,7 @@ export default function PreviewPage() {
         productDescription: description,
         productContext: productContext || undefined,
         funnelStage,
+        stylePackId,
         screenshotNames: items.map((i) => i.file.name),
         screenshotUrls: urls,
         hasLogo: Boolean(logoUrl),
@@ -311,7 +337,7 @@ export default function PreviewPage() {
     const data = (await res.json()) as GeneratedVideoScript;
     applyScriptToState(data);
     return data;
-  }, [applyScriptToState, items, productContext, productDescription, funnelStage, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
+  }, [applyScriptToState, items, productContext, productDescription, funnelStage, stylePackId, uploadedUrls, logoUrl, durationInFrames, aspectRatio]);
 
   const handleLogoSelected = useCallback(async (file: File) => {
     setLogoError(null);
@@ -490,6 +516,7 @@ export default function PreviewPage() {
       const { props } = scriptToRenderConfig(script, urls, {
         logoUrl: logoUrl ?? undefined,
         uiTrees: trees,
+        stylePackId,
       });
 
       const res = await fetch("/api/render/enqueue", {
@@ -540,6 +567,24 @@ export default function PreviewPage() {
         </header>
 
       <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6">
+        <StudioSection title="Style" hint="required">
+          <StylePackPicker
+            value={stylePackId}
+            onChange={(id) => {
+              setStylePackId(id);
+              setPreviewReady(false);
+              const pack = getStylePack(id);
+              if (pack.locks) {
+                setAspectRatio(pack.locks.aspectRatio);
+                setDurationInFrames(pack.locks.durationInFrames);
+                setPresetName(pack.locks.cameraPreset);
+                setFrameStyle(pack.locks.frameStyle);
+                setTextPreset(pack.locks.textPreset);
+              }
+            }}
+          />
+        </StudioSection>
+
         <StudioSection title="Format & Length" hint="optional">
           <FormatLengthSelector
             aspectRatio={aspectRatio}
@@ -642,6 +687,7 @@ export default function PreviewPage() {
             controls
             loop
             autoPlay
+            numberOfSharedAudioTags={8}
             acknowledgeRemotionLicense
           />
         </div>

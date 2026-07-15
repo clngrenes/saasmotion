@@ -10,6 +10,10 @@ import {
   shouldEnableAudio,
 } from "./audio-direction";
 import { buildVideoProps, mergeScenesWithCopy } from "./build-video-props";
+import {
+  applyStylePackToAudioDirection,
+  type StylePackId,
+} from "../../remotion/styles/catalog";
 
 export type ScriptRenderConfig = {
   readonly art: ArtDirection;
@@ -25,22 +29,30 @@ export function scriptToRenderConfig(
     readonly logoUrl?: string;
     readonly previewAudio?: boolean;
     readonly uiTrees?: readonly (UIReconstruction | null | undefined)[];
+    readonly stylePackId?: StylePackId;
   },
 ): ScriptRenderConfig {
+  const stylePackId = options?.stylePackId ?? "auto";
   const art = generatedArtDirectionToArtDirection(
     script.artDirection,
     screenshotUrls.length,
+    stylePackId,
   );
-  const audio = normalizeAudioDirection(
-    generatedAudioDirectionToAudioDirection(script.audioDirection),
-    {
-      hasLogo: Boolean(options?.logoUrl),
-      sceneTransition: art.sceneTransition,
-    },
+  const audio = applyStylePackToAudioDirection(
+    normalizeAudioDirection(
+      generatedAudioDirectionToAudioDirection(script.audioDirection),
+      {
+        hasLogo: Boolean(options?.logoUrl),
+        sceneTransition: art.sceneTransition,
+      },
+    ),
+    stylePackId,
+    Boolean(options?.logoUrl),
   );
-  const enableAudio = options?.previewAudio
-    ? false
-    : shouldEnableAudio(audio);
+  const enableAudio =
+    options?.previewAudio === true
+      ? false
+      : shouldEnableAudio(audio);
 
   const props = buildVideoProps({
     scenes: mergeScenesWithCopy(screenshotUrls, script.scenes, options?.uiTrees),

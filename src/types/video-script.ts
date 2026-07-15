@@ -90,6 +90,7 @@ export type GenerateScriptRequest = {
   readonly productDescription: string;
   readonly productContext?: string;
   readonly funnelStage: "awareness" | "consideration" | "conversion";
+  readonly stylePackId?: "linear" | "auto";
   readonly screenshotNames: readonly string[];
   readonly screenshotUrls?: readonly string[];
   readonly hasLogo?: boolean;

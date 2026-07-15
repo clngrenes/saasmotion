@@ -56,9 +56,9 @@ export function normalizeAudioDirection(
   return {
     ...audio,
     musicStyle,
-    musicVolume: Math.min(0.28, Math.max(0.15, audio.musicVolume)),
+    musicVolume: Math.min(0.55, Math.max(0.32, audio.musicVolume)),
     transitionSfx,
-    sfxVolume: Math.min(0.42, Math.max(0.24, audio.sfxVolume)),
+    sfxVolume: Math.min(0.5, Math.max(0.28, audio.sfxVolume)),
     playIntroRevealSfx:
       Boolean(options?.hasLogo) && audio.playIntroRevealSfx,
   };

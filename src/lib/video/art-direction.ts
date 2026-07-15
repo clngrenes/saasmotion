@@ -28,10 +28,15 @@ import {
   type SvgMotionId,
 } from "../../remotion/motion-skills/svg/ids";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
+import {
+  applyStylePackToArtDirection,
+  type StylePackId,
+} from "../../remotion/styles/catalog";
 
 export function generatedArtDirectionToArtDirection(
   generated: GeneratedArtDirection,
   sceneCount = 1,
+  stylePackId: StylePackId = "auto",
 ): ArtDirection {
   const aspectRatio = VIDEO_ASPECT_RATIO_IDS.includes(
     generated.aspectRatio as VideoAspectRatioId,
@@ -45,7 +50,7 @@ export function generatedArtDirectionToArtDirection(
     ? (generated.durationInFrames as VideoDurationFrames)
     : inferDurationFromSceneCount(sceneCount);
 
-  return {
+  const base: ArtDirection = {
     reasoning: generated.reasoning,
     cameraPreset: generated.cameraPreset,
     frameStyle: generated.frameStyle,
@@ -74,6 +79,8 @@ export function generatedArtDirectionToArtDirection(
       ? generated.svgAccent
       : DEFAULT_ART_DIRECTION.svgAccent,
   };
+
+  return applyStylePackToArtDirection(base, stylePackId);
 }
 
 function isLogoIntroMotionId(value: string): value is LogoIntroMotionId {

@@ -49,9 +49,9 @@ export type AudioDirection = {
 export const DEFAULT_AUDIO_DIRECTION: AudioDirection = {
   reasoning: "Balanced cinematic SaaS mix",
   musicStyle: "cinematic",
-  musicVolume: 0.18,
+  musicVolume: 0.4,
   transitionSfx: "whoosh",
-  sfxVolume: 0.3,
+  sfxVolume: 0.36,
   playIntroRevealSfx: true,
 };
 
@@ -73,8 +73,8 @@ TRANSITION SFX (must align with scene cuts):
 - none: only with musicStyle none/minimal keynote
 
 VOLUMES:
-- musicVolume 0.10–0.22 (lower for minimal, higher for upbeat)
-- sfxVolume 0.22–0.38 (soft for enterprise, louder for upbeat)
+- musicVolume 0.32–0.48 (bed clearly audible under UI motion)
+- sfxVolume 0.28–0.42 (soft for enterprise, louder for upbeat)
 
 playIntroRevealSfx: true when intro title leads into first screenshot (almost always).
 `;
