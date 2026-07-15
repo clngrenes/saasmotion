@@ -5,14 +5,14 @@ import path from "path";
 const BUNDLE_DIR = ".remotion";
 
 const REQUIRED_BUNDLE_AUDIO = [
-  "public/audio/music-cinematic.mp3",
-  "public/audio/music-ambient.mp3",
-  "public/audio/music-upbeat.mp3",
-  "public/audio/music-minimal.mp3",
-  "public/audio/music-tech.mp3",
-  "public/audio/whoosh.mp3",
-  "public/audio/sfx-soft.mp3",
-  "public/audio/sfx-pop.mp3",
+  "audio/music-cinematic.mp3",
+  "audio/music-ambient.mp3",
+  "audio/music-upbeat.mp3",
+  "audio/music-minimal.mp3",
+  "audio/music-tech.mp3",
+  "audio/whoosh.mp3",
+  "audio/sfx-soft.mp3",
+  "audio/sfx-pop.mp3",
 ] as const;
 
 export function getRemotionBundleDir(): string {
@@ -40,6 +40,12 @@ export function bundleRemotionProject(bundleDir: string = BUNDLE_DIR): void {
       cwd: process.cwd(),
       stdio: "inherit",
     });
+    // Remotion 4.x sometimes nests the public folder inside the bundle dir
+    // We explicitly copy the contents of public/ to the root of the bundle dir
+    // so staticFile("audio/...") correctly resolves to [serveUrl]/audio/...
+    if (fs.existsSync(path.join(process.cwd(), "public"))) {
+      execSync(`cp -R public/* ${bundleDir}/`, { cwd: process.cwd() });
+    }
   } catch (error) {
     const stderr = (error as { stderr?: Buffer }).stderr?.toString() ?? "";
     throw new Error(`Remotion bundle failed: ${stderr}`);

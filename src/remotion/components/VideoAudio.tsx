@@ -32,16 +32,16 @@ const MusicBed: React.FC<{
   readonly src: string;
   readonly volume: number;
 }> = ({ src, volume }) => {
-  const frame = useCurrentFrame();
-  const fadeIn = interpolate(frame, [0, 24], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
   return (
     <Audio
       src={resolveAudioSrc(src)}
-      volume={volume * fadeIn}
+      volume={(f) => {
+        const fadeIn = interpolate(f, [0, 24], [0, 1], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        });
+        return volume * fadeIn;
+      }}
       loop
       startFrom={0}
     />
