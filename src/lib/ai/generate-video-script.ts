@@ -152,10 +152,11 @@ ${input.hasLogo ? "- Logo IS uploaded — choose a svgMotion skill that compleme
 ${ART_DIRECTION_SKILL_GUIDE}
 
 AUDIO RULES:
-- Also pick music + transition SFX that match the visual direction
-- SFX must feel synced to scene cuts — whoosh for cinematic, soft for enterprise, pop for upbeat
-- playIntroRevealSfx: true when intro title leads into first screenshot (default true)
-- Do NOT pick musicStyle none unless solid-white keynote minimal
+- musicStyle: almost always cinematic or tech — NEVER none unless solid-white keynote
+- transitionSfx is auto-matched to sceneTransition on our side — pick whoosh for slides/wipes, soft for fades
+- playIntroRevealSfx: true ONLY when logo is uploaded; false when no logo
+- musicVolume 0.15–0.22, sfxVolume 0.24–0.36
+${input.hasLogo ? "" : "- No logo → playIntroRevealSfx MUST be false"}
 
 ${AUDIO_SKILL_GUIDE}
 

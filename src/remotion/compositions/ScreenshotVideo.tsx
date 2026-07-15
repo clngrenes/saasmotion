@@ -32,6 +32,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   durationInFrames,
   enableAudio,
   audioDirection,
+  backgroundMusicUrl,
+  transitionSfxUrl,
   logoUrl,
   textPreset,
   frameStyle = "window",
@@ -80,6 +82,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
         introDurationFrames={introDuration}
         enableAudio={enableAudio}
         audioDirection={audioDirection}
+        backgroundMusicUrl={backgroundMusicUrl}
+        transitionSfxUrl={transitionSfxUrl}
         fps={fps}
         transitionDurationFrames={DEFAULT_TRANSITION_DURATION_FRAMES}
       />

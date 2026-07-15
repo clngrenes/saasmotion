@@ -5,6 +5,7 @@ import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video
 import { generatedArtDirectionToArtDirection } from "./art-direction";
 import {
   generatedAudioDirectionToAudioDirection,
+  normalizeAudioDirection,
   shouldEnableAudio,
 } from "./audio-direction";
 import { buildVideoProps, mergeScenesWithCopy } from "./build-video-props";
@@ -25,7 +26,13 @@ export function scriptToRenderConfig(
     script.artDirection,
     screenshotUrls.length,
   );
-  const audio = generatedAudioDirectionToAudioDirection(script.audioDirection);
+  const audio = normalizeAudioDirection(
+    generatedAudioDirectionToAudioDirection(script.audioDirection),
+    {
+      hasLogo: Boolean(options?.logoUrl),
+      sceneTransition: art.sceneTransition,
+    },
+  );
   const enableAudio = options?.previewAudio
     ? false
     : shouldEnableAudio(audio);

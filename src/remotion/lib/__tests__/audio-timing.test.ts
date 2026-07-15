@@ -17,7 +17,7 @@ describe("getAudioCues", () => {
 
     const introCue = cues.find((c) => c.type === "intro-reveal");
     expect(introCue).toBeDefined();
-    expect(introCue!.frame).toBe(INTRO_DURATION_FRAMES - 5);
+    expect(introCue!.frame).toBe(INTRO_DURATION_FRAMES - 8);
   });
 
   it("places scene transition SFX before each smooth transition", () => {
@@ -38,10 +38,10 @@ describe("getAudioCues", () => {
     const transitionStarts = getTransitionStartFrames(contentDuration, 3);
 
     expect(transitions[0].frame).toBe(
-      INTRO_DURATION_FRAMES + transitionStarts[0] - 5,
+      INTRO_DURATION_FRAMES + transitionStarts[0] - 8,
     );
     expect(transitions[1].frame).toBe(
-      INTRO_DURATION_FRAMES + transitionStarts[1] - 5,
+      INTRO_DURATION_FRAMES + transitionStarts[1] - 8,
     );
   });
 

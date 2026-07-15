@@ -1,3 +1,4 @@
+import { interpolate, useCurrentFrame } from "remotion";
 import React from "react";
 import { Audio, Sequence, staticFile } from "remotion";
 import type { AudioDirection } from "../constants/audio-catalog";
@@ -14,6 +15,8 @@ interface VideoAudioProps {
   readonly introDurationFrames: number;
   readonly enableAudio: boolean;
   readonly audioDirection?: AudioDirection;
+  readonly backgroundMusicUrl?: string;
+  readonly transitionSfxUrl?: string;
   readonly fps?: number;
   readonly transitionDurationFrames?: number;
 }
@@ -25,12 +28,34 @@ function resolveAudioSrc(src: string): string {
   return staticFile(src.replace(/^\//, ""));
 }
 
+const MusicBed: React.FC<{
+  readonly src: string;
+  readonly volume: number;
+}> = ({ src, volume }) => {
+  const frame = useCurrentFrame();
+  const fadeIn = interpolate(frame, [0, 24], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <Audio
+      src={resolveAudioSrc(src)}
+      volume={volume * fadeIn}
+      loop
+      startFrom={0}
+    />
+  );
+};
+
 export const VideoAudio: React.FC<VideoAudioProps> = ({
   durationInFrames,
   slideCount,
   introDurationFrames,
   enableAudio,
   audioDirection,
+  backgroundMusicUrl,
+  transitionSfxUrl,
   fps = 30,
   transitionDurationFrames,
 }) => {
@@ -44,8 +69,11 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
     return null;
   }
 
-  const musicFile = resolveMusicFile(direction.musicStyle);
-  const sfxFile = resolveSfxFile(direction.transitionSfx);
+  const musicFile =
+    backgroundMusicUrl ?? resolveMusicFile(direction.musicStyle) ?? null;
+  const sfxFile =
+    transitionSfxUrl ?? resolveSfxFile(direction.transitionSfx) ?? null;
+
   const cues = getAudioCues({
     durationInFrames,
     slideCount,
@@ -60,15 +88,12 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
 
   return (
     <>
-      {musicFile && (
-        <Audio
-          src={resolveAudioSrc(musicFile)}
-          volume={direction.musicVolume}
-          loop
-        />
+      {musicFile && direction.musicStyle !== "none" && (
+        <MusicBed src={musicFile} volume={direction.musicVolume} />
       )}
 
       {sfxFile &&
+        direction.transitionSfx !== "none" &&
         cues.map((cue) => (
           <Sequence
             key={`${cue.type}-${cue.frame}`}
@@ -76,7 +101,11 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
             durationInFrames={sfxDuration}
             layout="none"
           >
-            <Audio src={resolveAudioSrc(sfxFile)} volume={direction.sfxVolume} />
+            <Audio
+              src={resolveAudioSrc(sfxFile)}
+              volume={direction.sfxVolume}
+              startFrom={0}
+            />
           </Sequence>
         ))}
     </>

@@ -34,6 +34,7 @@ export async function renderVideoLocally(
     composition,
     serveUrl,
     codec: "h264",
+    audioCodec: "aac",
     outputLocation,
     inputProps: props,
     onProgress: ({ progress }) => {

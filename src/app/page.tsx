@@ -29,7 +29,7 @@ import {
 } from "../lib/video/build-video-props";
 import { scriptToRenderConfig } from "../lib/video/apply-generated-script";
 import { generatedArtDirectionToArtDirection } from "../lib/video/art-direction";
-import { generatedAudioDirectionToAudioDirection } from "../lib/video/audio-direction";
+import { generatedAudioDirectionToAudioDirection, normalizeAudioDirection } from "../lib/video/audio-direction";
 import type { ArtDirection } from "../remotion/art-direction/catalog";
 import type { AudioDirection } from "../remotion/constants/audio-catalog";
 import { isTextPresetId } from "../remotion/text-presets/catalog";
@@ -227,7 +227,13 @@ export default function PreviewPage() {
       data.artDirection,
       data.scenes.length,
     );
-    const audio = generatedAudioDirectionToAudioDirection(data.audioDirection);
+    const audio = normalizeAudioDirection(
+      generatedAudioDirectionToAudioDirection(data.audioDirection),
+      {
+        hasLogo: Boolean(logoUrl),
+        sceneTransition: directed.sceneTransition,
+      },
+    );
     setProductName(data.productName);
     setTagline(data.tagline);
     setSceneCopy([...data.scenes]);
@@ -242,7 +248,7 @@ export default function PreviewPage() {
     setAudioDirection(audio);
     setPreviewReady(true);
     return { directed, audio };
-  }, []);
+  }, [logoUrl]);
 
   const generateScript = useCallback(async () => {
     const urls = uploadedUrls.filter((u): u is string => Boolean(u));

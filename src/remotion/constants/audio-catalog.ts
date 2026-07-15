@@ -49,9 +49,9 @@ export type AudioDirection = {
 export const DEFAULT_AUDIO_DIRECTION: AudioDirection = {
   reasoning: "Balanced cinematic SaaS mix",
   musicStyle: "cinematic",
-  musicVolume: 0.16,
+  musicVolume: 0.18,
   transitionSfx: "whoosh",
-  sfxVolume: 0.32,
+  sfxVolume: 0.3,
   playIntroRevealSfx: true,
 };
 
