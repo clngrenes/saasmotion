@@ -21,6 +21,7 @@
 /build
 .remotion
 .remotion-test
+.remotion-test-bundle
 
 # misc
 .DS_Store
