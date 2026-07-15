@@ -70,9 +70,9 @@ export const screenshotVideoSchema = z.object({
   audioDirection: z.object({
     reasoning: z.string().max(300),
     musicStyle: z.enum(MUSIC_STYLE_IDS),
-    musicVolume: z.number().min(0.08).max(0.28),
+    musicVolume: z.number().min(0.28).max(0.55),
     transitionSfx: z.enum(SFX_STYLE_IDS),
-    sfxVolume: z.number().min(0.18).max(0.45),
+    sfxVolume: z.number().min(0.24).max(0.5),
     playIntroRevealSfx: z.boolean(),
   }),
 });

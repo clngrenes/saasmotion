@@ -10,8 +10,12 @@ export async function POST(request: Request) {
 
     const parseResult = screenshotVideoSchema.safeParse(body.props);
     if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0];
+      const detail = firstIssue
+        ? `${firstIssue.path.join(".")}: ${firstIssue.message}`
+        : "Props failed validation";
       return NextResponse.json(
-        { error: "Invalid props", details: parseResult.error.format() },
+        { error: "Invalid props", message: detail, details: parseResult.error.format() },
         { status: 400 },
       );
     }
