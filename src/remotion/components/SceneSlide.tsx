@@ -10,7 +10,6 @@ import type { TextPresetId } from "../text-presets/catalog";
 import type { CameraPresetName, FrameStyleId, VideoScene } from "../types/screenshot-video";
 import { DeviceFrameMesh } from "./DeviceFrameMesh";
 import { WindowFrameMesh } from "./WindowFrameMesh";
-import { ReconstructedSceneSlide } from "./reconstructed/ReconstructedSceneSlide";
 import { SceneHeadline } from "./SceneHeadline";
 import { SuspenseLoader } from "./SuspenseLoader";
 import {
@@ -31,10 +30,9 @@ type SceneSlideProps = {
 };
 
 export const SceneSlide: React.FC<SceneSlideProps> = (props) => {
-  if (props.scene.uiTree) {
-    return <ReconstructedSceneSlide {...props} />;
-  }
-
+  // Always render the real screenshot in a device/window mesh.
+  // ReconstructedSceneSlide (AI layer tree) is intentionally disabled —
+  // low-fidelity reconstructions produced gray placeholder blocks instead of the product UI.
   const {
     scene,
     durationInFrames,

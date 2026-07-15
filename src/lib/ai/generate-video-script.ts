@@ -118,7 +118,7 @@ function buildPrompt(input: {
 STYLE PACK LOCKED: "${pack.label}" (reference: ${pack.referenceUrl ?? "n/a"})
 The founder chose this pack. You MUST use these artDirection + audioDirection values exactly:
 - cameraPreset: "${pack.locks.cameraPreset}"
-- frameStyle: "${pack.locks.frameStyle}"
+- frameStyle: ${pack.locks.frameStyle ? `"${pack.locks.frameStyle}"` : "infer from screenshots (tall/mobile → phone, wide/desktop → window)"}
 - textPreset: "${pack.locks.textPreset}"
 - background: "${pack.locks.background}"
 - introMotion: "${pack.locks.introMotion}"

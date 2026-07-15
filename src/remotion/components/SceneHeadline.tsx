@@ -95,6 +95,17 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
             margin: contentAlign === "center" ? "0 auto" : undefined,
             textAlign: textPreset === "kinetic-timeline" ? "left" : "center",
             fontFamily: SAAS_FONT_FAMILY,
+            // Solid plate so copy never sits illegibly on light app UI
+            backgroundColor:
+              background === "solid-white"
+                ? "rgba(255,255,255,0.92)"
+                : "rgba(5,6,10,0.78)",
+            borderRadius: Math.round(layout.headlineSize * 0.35),
+            padding: `${Math.round(layout.gapY * 1.4)}px ${Math.round(layout.paddingX * 0.45)}px`,
+            boxShadow:
+              background === "solid-white"
+                ? "0 8px 32px rgba(0,0,0,0.12)"
+                : "0 12px 40px rgba(0,0,0,0.45)",
           }}
         >
           {isKinetic ? (

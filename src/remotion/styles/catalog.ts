@@ -17,7 +17,8 @@ export type StylePackId = (typeof STYLE_PACK_IDS)[number];
 
 export type StylePackLocks = {
   readonly cameraPreset: CameraPresetName;
-  readonly frameStyle: FrameStyleId;
+  /** If omitted, AI/infer keeps frameStyle (phone vs window from screenshots) */
+  readonly frameStyle?: FrameStyleId;
   readonly textPreset: TextPresetId;
   readonly background: BackgroundStyleId;
   readonly effects: ArtDirection["effects"];
@@ -60,7 +61,6 @@ export const STYLE_PACKS: readonly StylePack[] = [
     referenceUrl: "https://youtu.be/Q-f0dQ764so",
     locks: {
       cameraPreset: "linear-style",
-      frameStyle: "window",
       textPreset: "kinetic-words",
       background: "solid-dark",
       effects: {
@@ -119,7 +119,7 @@ export function applyStylePackToArtDirection(
   return {
     ...art,
     cameraPreset: L.cameraPreset,
-    frameStyle: L.frameStyle,
+    frameStyle: L.frameStyle ?? art.frameStyle,
     textPreset: L.textPreset,
     background: L.background,
     effects: L.effects,

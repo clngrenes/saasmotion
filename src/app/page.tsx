@@ -462,60 +462,54 @@ export default function PreviewPage() {
 
     try {
       let script: GeneratedVideoScript;
-      const names = items.map((i) => i.file.name);
+      // Skip AI UI reconstruction for now — it replaced real screenshots with gray placeholder blocks.
+      // Render the uploaded screenshots directly in the device/window mesh instead.
+      if (
+        previewReady &&
+        artDirection &&
+        audioDirection &&
+        sceneCopy.length === items.length
+      ) {
+        script = {
+          productName,
+          tagline,
+          scenes: sceneCopy,
+          artDirection: {
+            reasoning: artDirection.reasoning,
+            cameraPreset: artDirection.cameraPreset,
+            frameStyle: artDirection.frameStyle,
+            textPreset: artDirection.textPreset,
+            aspectRatio: artDirection.aspectRatio,
+            durationInFrames: artDirection.durationInFrames,
+            background: artDirection.background,
+            effects: artDirection.effects,
+            style: artDirection.style,
+            introMotion: artDirection.introMotion,
+            sceneTransition: artDirection.sceneTransition,
+            logoIntroMotion: artDirection.logoIntroMotion,
+            logoIntroBackdrop: artDirection.logoIntroBackdrop,
+            svgMotion: artDirection.svgMotion,
+            svgAccent: artDirection.svgAccent,
+          },
+          audioDirection: {
+            reasoning: audioDirection.reasoning,
+            musicStyle: audioDirection.musicStyle,
+            musicVolume: audioDirection.musicVolume,
+            transitionSfx: audioDirection.transitionSfx,
+            sfxVolume: audioDirection.sfxVolume,
+            playIntroRevealSfx: audioDirection.playIntroRevealSfx,
+          },
+        } satisfies GeneratedVideoScript;
+      } else {
+        script = await generateScript();
+      }
 
-      const [scriptOrNull, trees] = await Promise.all([
-        (async () => {
-          if (
-            previewReady &&
-            artDirection &&
-            audioDirection &&
-            sceneCopy.length === items.length
-          ) {
-            return {
-              productName,
-              tagline,
-              scenes: sceneCopy,
-              artDirection: {
-                reasoning: artDirection.reasoning,
-                cameraPreset: artDirection.cameraPreset,
-                frameStyle: artDirection.frameStyle,
-                textPreset: artDirection.textPreset,
-                aspectRatio: artDirection.aspectRatio,
-                durationInFrames: artDirection.durationInFrames,
-                background: artDirection.background,
-                effects: artDirection.effects,
-                style: artDirection.style,
-                introMotion: artDirection.introMotion,
-                sceneTransition: artDirection.sceneTransition,
-                logoIntroMotion: artDirection.logoIntroMotion,
-                logoIntroBackdrop: artDirection.logoIntroBackdrop,
-                svgMotion: artDirection.svgMotion,
-                svgAccent: artDirection.svgAccent,
-              },
-              audioDirection: {
-                reasoning: audioDirection.reasoning,
-                musicStyle: audioDirection.musicStyle,
-                musicVolume: audioDirection.musicVolume,
-                transitionSfx: audioDirection.transitionSfx,
-                sfxVolume: audioDirection.sfxVolume,
-                playIntroRevealSfx: audioDirection.playIntroRevealSfx,
-              },
-            } satisfies GeneratedVideoScript;
-          }
-          return generateScript();
-        })(),
-        reconstructScreenshots(urls, names),
-      ]);
-
-      script = scriptOrNull;
-      setUiTrees(trees);
+      setUiTrees([]);
 
       setExportPhase("queued");
 
       const { props } = scriptToRenderConfig(script, urls, {
         logoUrl: logoUrl ?? undefined,
-        uiTrees: trees,
         stylePackId,
       });
 
@@ -543,7 +537,7 @@ export default function PreviewPage() {
   const isExporting = exportPhase !== "idle" && exportPhase !== "done" && exportPhase !== "failed";
 
   const statusLine = isExporting && exportPhase === "script"
-    ? "Rebuilding UI layers from screenshots…"
+    ? "Writing script and art direction…"
     : previewReady
       ? "Ready to create"
       : items.length > 0
@@ -578,7 +572,7 @@ export default function PreviewPage() {
                 setAspectRatio(pack.locks.aspectRatio);
                 setDurationInFrames(pack.locks.durationInFrames);
                 setPresetName(pack.locks.cameraPreset);
-                setFrameStyle(pack.locks.frameStyle);
+                if (pack.locks.frameStyle) setFrameStyle(pack.locks.frameStyle);
                 setTextPreset(pack.locks.textPreset);
               }
             }}
