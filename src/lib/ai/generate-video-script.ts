@@ -142,6 +142,7 @@ ${input.requestedAspectRatio ? `- USER REQUESTED ASPECT RATIO: MUST USE "${input
 ${input.requestedDuration ? `- USER REQUESTED DURATION: MUST USE "${input.requestedDuration}". If duration is long (e.g. 1800+) but screenshot count is low, write rich, engaging, multi-part story copy to fill the time!` : ""}
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - ALWAYS prefer "linear-style" for cameraPreset unless it's a very simple mobile app. Linear-style provides the best whip-zoom motion.
+- IMPORTANT: When returning \`highlightBox\` coordinates, ONLY highlight cleanly separated floating cards, completely detached modals, or very distinct completely isolated UI blocks. DO NOT highlight rows in a list, text blocks, or merged UI sections, because they will be cut out as a sharp rectangle and look terrible. If there's no perfectly isolated floating element, omit \`highlightBox\`.
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
 - Pick logoIntroMotion + logoIntroBackdrop + sceneTransition + svgMotion as ONE Jitter-style motion language (see skill guide)

@@ -45,10 +45,11 @@ export const computeLinearStyle: PresetComputeFn = ({
     const hCenterY = fy + fh / 2;
 
     // Move the mesh in the OPPOSITE direction of the highlight to center it.
-    // Center is (0.5, 0.5). If highlight is at X=0.8, we move mesh left (-).
-    // The multiplier (0.65) ensures we don't move it so far off-screen that edges show.
+    // However, if we move it dead center, it crashes into the SceneHeadline text.
+    // So we add an offset to targetMeshY so the highlight stays slightly lower
+    // in the frame, leaving room for text at the top.
     targetMeshX = -(hCenterX - 0.5) * WORLD_WIDTH * 0.65;
-    targetMeshY = (hCenterY - 0.5) * WORLD_HEIGHT * 0.65;
+    targetMeshY = (hCenterY - 0.5) * WORLD_HEIGHT * 0.65 - 0.8;
   }
 
   // Calculate current positions

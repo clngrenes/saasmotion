@@ -74,38 +74,26 @@ export const UIHighlightLayer: React.FC<UIHighlightLayerProps> = ({
     easing: (t) => 1 - Math.pow(1 - t, 3), // cubic ease out
   });
   
-  const zOffset = popProgress * 0.35; // Lifts much higher in Linear style
+  const zOffset = popProgress * 0.18;
+
+  // We construct a soft drop shadow material for the entire frame dimming
+  // rather than a harsh black box.
+  const dimOpacity = 0.45 * popProgress * opacity;
 
   return (
     <group position={[highlightData.offsetX, highlightData.offsetY, 0]}>
-      {/* Dim the entire background behind the highlight */}
+      {/* Dim the entire background behind the highlight, softer */}
       <mesh position={[-highlightData.offsetX, -highlightData.offsetY, 0.001]} scale={[1, 1, 1]}>
         <planeGeometry args={[10, 10]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.6 * popProgress * opacity} />
+        <meshBasicMaterial color="#000000" transparent opacity={dimOpacity} />
       </mesh>
 
-      {/* Massive soft glow behind the pop-out */}
-      <mesh position={[0, 0, zOffset * 0.5]} scale={[1.2, 1.2, 1]}>
-        <planeGeometry args={[highlightData.width, highlightData.height]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.15 * popProgress * opacity} />
-      </mesh>
-
-      {/* Soft drop shadow on the base plane */}
-      <mesh position={[0, -0.05 * popProgress, zOffset * 0.6]} scale={[1.05, 1.05, 1]}>
-        <planeGeometry args={[highlightData.width, highlightData.height]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.5 * popProgress * opacity} />
-      </mesh>
-
-      {/* The floating highlight plane */}
+      {/* The floating highlight plane with rounded edges? PlaneGeometry is sharp.
+          Since we can't easily do RoundedBox without a custom shader or shape,
+          we rely on the base texture. */}
       <mesh position={[0, 0, zOffset + 0.002]}>
         <planeGeometry args={[highlightData.width, highlightData.height]} />
         <meshBasicMaterial map={highlightData.texture} toneMapped={false} transparent opacity={opacity} />
-      </mesh>
-
-      {/* Thin rim light (stroke) on top of the pop out */}
-      <mesh position={[0, 0, zOffset + 0.003]}>
-        <ringGeometry args={[highlightData.width, highlightData.height]} />
-        {/* We cheat the ring with an edge plane, or just rely on the user's UI. */}
       </mesh>
     </group>
   );

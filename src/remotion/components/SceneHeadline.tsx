@@ -55,8 +55,8 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
         style={{
           position: "absolute",
           ...(isLandscape
-            ? { bottom: Math.round(height * 0.08), left: 0, right: 0 }
-            : { top: Math.round(height * 0.06), left: 0, right: 0 }),
+            ? { bottom: Math.round(height * 0.06), left: 0, right: 0 }
+            : { top: Math.round(height * 0.04), left: 0, right: 0 }),
           padding: `0 ${paddingX}px`,
           textAlign: textPreset === "kinetic-timeline" ? "left" : "center",
           pointerEvents: "none",
@@ -100,8 +100,8 @@ export const SceneHeadline: React.FC<SceneHeadlineProps> = ({
       style={{
         position: "absolute",
         ...(isLandscape
-          ? { bottom: Math.round(height * 0.08), left: 0, right: 0 }
-          : { top: Math.round(height * 0.06), left: 0, right: 0 }),
+          ? { bottom: Math.round(height * 0.06), left: 0, right: 0 }
+          : { top: Math.round(height * 0.04), left: 0, right: 0 }),
         padding: `0 ${paddingX}px`,
         textAlign: "center",
         pointerEvents: "none",
