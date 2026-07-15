@@ -1,105 +1,91 @@
 import React from "react";
-import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  Easing,
+  Img,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { INTRO_DURATION_FRAMES } from "../constants/media";
 
 interface ProductIntroProps {
-  readonly productName: string;
-  readonly tagline: string;
   readonly logoUrl?: string;
 }
 
-export const ProductIntro: React.FC<ProductIntroProps> = ({
-  productName,
-  tagline,
-  logoUrl,
-}) => {
+const ENTER_END = 22;
+const HOLD_END = INTRO_DURATION_FRAMES - 16;
+
+export const ProductIntro: React.FC<ProductIntroProps> = ({ logoUrl }) => {
   const frame = useCurrentFrame();
   const { width } = useVideoConfig();
 
-  const opacity = interpolate(
+  if (!logoUrl) {
+    return null;
+  }
+
+  const blurIn = interpolate(frame, [0, ENTER_END], [22, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+
+  const blurOut = interpolate(frame, [HOLD_END, INTRO_DURATION_FRAMES], [0, 18], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.in(Easing.cubic),
+  });
+
+  const blur = frame < HOLD_END ? blurIn : blurOut;
+
+  const logoOpacity = interpolate(
     frame,
-    [0, 12, INTRO_DURATION_FRAMES - 14, INTRO_DURATION_FRAMES],
+    [0, ENTER_END, HOLD_END, INTRO_DURATION_FRAMES],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  const scale = interpolate(frame, [0, 20], [0.96, 1], {
+  const scale = interpolate(frame, [0, ENTER_END], [0.82, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
   });
 
-  if (!productName) {
-    return null;
-  }
+  const screenOpacity = interpolate(
+    frame,
+    [HOLD_END - 4, INTRO_DURATION_FRAMES],
+    [1, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.inOut(Easing.cubic),
+    },
+  );
 
-  const titleSize = Math.round(width * 0.067);
-  const taglineSize = Math.round(width * 0.028);
-  const labelSize = Math.round(width * 0.024);
+  const logoSize = Math.round(Math.min(width * 0.22, 280));
 
   return (
     <AbsoluteFill
       style={{
+        backgroundColor: "#ffffff",
         justifyContent: "center",
         alignItems: "center",
-        opacity,
+        opacity: screenOpacity,
         zIndex: 30,
         pointerEvents: "none",
       }}
     >
-      <div style={{ transform: `scale(${scale})`, textAlign: "center", padding: 48 }}>
-        {logoUrl && (
-          <Img
-            src={logoUrl}
-            style={{
-              width: Math.round(width * 0.09),
-              height: Math.round(width * 0.09),
-              objectFit: "contain",
-              margin: "0 auto 28px",
-              display: "block",
-            }}
-          />
-        )}
-        <p
-          style={{
-            margin: 0,
-            color: "rgba(148, 163, 184, 0.9)",
-            fontSize: labelSize,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            fontWeight: 600,
-          }}
-        >
-          Introducing
-        </p>
-        <h1
-          style={{
-            margin: "12px 0 0",
-            color: "#ffffff",
-            fontSize: titleSize,
-            fontWeight: 800,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.05,
-            fontFamily:
-              'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-          }}
-        >
-          {productName}
-        </h1>
-        {tagline && (
-          <p
-            style={{
-              margin: "20px 0 0",
-              color: "rgba(226, 232, 240, 0.75)",
-              fontSize: taglineSize,
-              fontWeight: 400,
-              maxWidth: width * 0.75,
-              lineHeight: 1.35,
-            }}
-          >
-            {tagline}
-          </p>
-        )}
-      </div>
+      <Img
+        src={logoUrl}
+        style={{
+          width: logoSize,
+          height: logoSize,
+          objectFit: "contain",
+          opacity: logoOpacity,
+          filter: `blur(${blur}px)`,
+          transform: `scale(${scale})`,
+        }}
+      />
     </AbsoluteFill>
   );
 };

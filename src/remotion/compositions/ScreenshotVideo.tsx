@@ -20,8 +20,6 @@ import type { ScreenshotVideoProps } from "../types/screenshot-video";
 
 export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   scenes,
-  productName,
-  tagline,
   presetName,
   durationInFrames,
   enableAudio,
@@ -44,7 +42,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
     },
   ];
 
-  const contentDuration = Math.max(1, durationInFrames - INTRO_DURATION_FRAMES);
+  const introDuration = logoUrl ? INTRO_DURATION_FRAMES : 0;
+  const contentDuration = Math.max(1, durationInFrames - introDuration);
   const sceneSequenceDuration = useMemo(
     () => getSceneSequenceDuration(contentDuration, safeScenes.length),
     [contentDuration, safeScenes.length],
@@ -66,18 +65,20 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
       <VideoAudio
         durationInFrames={durationInFrames}
         slideCount={safeScenes.length}
-        introDurationFrames={INTRO_DURATION_FRAMES}
+        introDurationFrames={introDuration}
         enableAudio={enableAudio}
         audioDirection={audioDirection}
         fps={fps}
         transitionDurationFrames={DEFAULT_TRANSITION_DURATION_FRAMES}
       />
 
-      <Sequence from={0} durationInFrames={INTRO_DURATION_FRAMES}>
-        <ProductIntro productName={productName} tagline={tagline} logoUrl={logoUrl} />
-      </Sequence>
+      {introDuration > 0 && (
+        <Sequence from={0} durationInFrames={introDuration}>
+          <ProductIntro logoUrl={logoUrl} />
+        </Sequence>
+      )}
 
-      <Sequence from={INTRO_DURATION_FRAMES} durationInFrames={contentDuration}>
+      <Sequence from={introDuration} durationInFrames={contentDuration}>
         {safeScenes.length === 1 ? (
           <SceneSlide
             scene={safeScenes[0]}
