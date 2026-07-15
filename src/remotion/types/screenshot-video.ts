@@ -7,6 +7,7 @@ import type {
 } from "../art-direction/catalog";
 import type { AudioDirection } from "../constants/audio-catalog";
 import type { SceneTransitionId } from "../transitions/ids";
+import type { LogoIntroBackdropId, LogoIntroMotionId } from "../motion-skills/ids";
 
 /** Preset-IDs — kebab-case, stabil für API/DB/Lambda-Props */
 export const CAMERA_PRESET_NAMES = [
@@ -78,6 +79,8 @@ export type ScreenshotVideoProps = {
   readonly introMotion: IntroMotionId;
   readonly audioDirection: AudioDirection;
   readonly sceneTransition: SceneTransitionId;
+  readonly logoIntroMotion: LogoIntroMotionId;
+  readonly logoIntroBackdrop: LogoIntroBackdropId;
 };
 
 /** Device-Frame Geometrie-Konstanten (Option B Default) */

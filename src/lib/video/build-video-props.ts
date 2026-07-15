@@ -104,6 +104,8 @@ export function buildVideoProps(input: {
     panelStyle: input.panelStyle ?? artDirectionToPanelStyle(art),
     introMotion: input.introMotion ?? art.introMotion,
     sceneTransition: art.sceneTransition,
+    logoIntroMotion: art.logoIntroMotion,
+    logoIntroBackdrop: art.logoIntroBackdrop,
     audioDirection: audio,
   };
 }

@@ -1,22 +1,25 @@
 import React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  Img,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
-import { INTRO_DURATION_FRAMES } from "../constants/media";
+import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig } from "remotion";
+import { computeLogoIntroStyle } from "../motion-skills/logo-intro";
+import type { LogoIntroBackdropId, LogoIntroMotionId } from "../motion-skills/ids";
+import { DEFAULT_LOGO_INTRO_BACKDROP, DEFAULT_LOGO_INTRO_MOTION } from "../motion-skills/ids";
 
 interface ProductIntroProps {
   readonly logoUrl?: string;
+  readonly logoIntroMotion?: LogoIntroMotionId;
+  readonly logoIntroBackdrop?: LogoIntroBackdropId;
 }
 
-const ENTER_END = 22;
-const HOLD_END = INTRO_DURATION_FRAMES - 16;
+const BACKDROP_COLOR: Record<LogoIntroBackdropId, string> = {
+  white: "#ffffff",
+  dark: "#05060a",
+};
 
-export const ProductIntro: React.FC<ProductIntroProps> = ({ logoUrl }) => {
+export const ProductIntro: React.FC<ProductIntroProps> = ({
+  logoUrl,
+  logoIntroMotion = DEFAULT_LOGO_INTRO_MOTION,
+  logoIntroBackdrop = DEFAULT_LOGO_INTRO_BACKDROP,
+}) => {
   const frame = useCurrentFrame();
   const { width } = useVideoConfig();
 
@@ -24,68 +27,40 @@ export const ProductIntro: React.FC<ProductIntroProps> = ({ logoUrl }) => {
     return null;
   }
 
-  const blurIn = interpolate(frame, [0, ENTER_END], [22, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-
-  const blurOut = interpolate(frame, [HOLD_END, INTRO_DURATION_FRAMES], [0, 18], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.in(Easing.cubic),
-  });
-
-  const blur = frame < HOLD_END ? blurIn : blurOut;
-
-  const logoOpacity = interpolate(
-    frame,
-    [0, ENTER_END, HOLD_END, INTRO_DURATION_FRAMES],
-    [0, 1, 1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-
-  const scale = interpolate(frame, [0, ENTER_END], [0.82, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-
-  const screenOpacity = interpolate(
-    frame,
-    [HOLD_END - 4, INTRO_DURATION_FRAMES],
-    [1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.inOut(Easing.cubic),
-    },
-  );
-
+  const style = computeLogoIntroStyle(frame, logoIntroMotion);
   const logoSize = Math.round(Math.min(width * 0.22, 280));
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#ffffff",
+        backgroundColor: BACKDROP_COLOR[logoIntroBackdrop],
         justifyContent: "center",
         alignItems: "center",
-        opacity: screenOpacity,
+        opacity: style.screenOpacity,
         zIndex: 30,
         pointerEvents: "none",
       }}
     >
-      <Img
-        src={logoUrl}
+      <div
         style={{
-          width: logoSize,
-          height: logoSize,
-          objectFit: "contain",
-          opacity: logoOpacity,
-          filter: `blur(${blur}px)`,
-          transform: `scale(${scale})`,
+          clipPath: style.clipPath,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
-      />
+      >
+        <Img
+          src={logoUrl}
+          style={{
+            width: logoSize,
+            height: logoSize,
+            objectFit: "contain",
+            opacity: style.opacity,
+            filter: style.blur > 0 ? `blur(${style.blur}px)` : undefined,
+            transform: `translate(${style.translateX}px, ${style.translateY}px) scale(${style.scale})`,
+          }}
+        />
+      </div>
     </AbsoluteFill>
   );
 };

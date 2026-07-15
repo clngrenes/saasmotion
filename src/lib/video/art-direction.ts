@@ -15,6 +15,12 @@ import {
   SCENE_TRANSITION_IDS,
   type SceneTransitionId,
 } from "../../remotion/transitions/ids";
+import {
+  LOGO_INTRO_BACKDROP_IDS,
+  LOGO_INTRO_MOTION_IDS,
+  type LogoIntroBackdropId,
+  type LogoIntroMotionId,
+} from "../../remotion/motion-skills/ids";
 import type { ScreenshotVideoProps } from "../../remotion/types/screenshot-video";
 
 export function generatedArtDirectionToArtDirection(
@@ -49,7 +55,21 @@ export function generatedArtDirectionToArtDirection(
     sceneTransition: isSceneTransitionId(generated.sceneTransition)
       ? generated.sceneTransition
       : DEFAULT_ART_DIRECTION.sceneTransition,
+    logoIntroMotion: isLogoIntroMotionId(generated.logoIntroMotion)
+      ? generated.logoIntroMotion
+      : DEFAULT_ART_DIRECTION.logoIntroMotion,
+    logoIntroBackdrop: isLogoIntroBackdropId(generated.logoIntroBackdrop)
+      ? generated.logoIntroBackdrop
+      : DEFAULT_ART_DIRECTION.logoIntroBackdrop,
   };
+}
+
+function isLogoIntroMotionId(value: string): value is LogoIntroMotionId {
+  return (LOGO_INTRO_MOTION_IDS as readonly string[]).includes(value);
+}
+
+function isLogoIntroBackdropId(value: string): value is LogoIntroBackdropId {
+  return (LOGO_INTRO_BACKDROP_IDS as readonly string[]).includes(value);
 }
 
 function isSceneTransitionId(value: string): value is SceneTransitionId {
@@ -69,6 +89,8 @@ export function applyArtDirectionToProps(
     panelStyle: artDirectionToPanelStyle(art),
     introMotion: art.introMotion,
     sceneTransition: art.sceneTransition,
+    logoIntroMotion: art.logoIntroMotion,
+    logoIntroBackdrop: art.logoIntroBackdrop,
   };
 }
 

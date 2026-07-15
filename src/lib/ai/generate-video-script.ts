@@ -17,6 +17,10 @@ import {
 import { TEXT_PRESET_IDS, type TextPresetId } from "../../remotion/text-presets/catalog";
 import { CAMERA_PRESET_NAMES } from "../../remotion/types/screenshot-video";
 import { SCENE_TRANSITION_IDS } from "../../remotion/transitions/ids";
+import {
+  LOGO_INTRO_BACKDROP_IDS,
+  LOGO_INTRO_MOTION_IDS,
+} from "../../remotion/motion-skills/ids";
 import type { GeneratedVideoScript } from "../../types/video-script";
 import { scriptModel } from "./google";
 import { trimProductContext } from "./trim-product-context";
@@ -50,6 +54,8 @@ const scriptSchema = z.object({
     }),
     introMotion: z.enum(INTRO_MOTION_IDS),
     sceneTransition: z.enum(SCENE_TRANSITION_IDS),
+    logoIntroMotion: z.enum(LOGO_INTRO_MOTION_IDS),
+    logoIntroBackdrop: z.enum(LOGO_INTRO_BACKDROP_IDS),
   }),
   audioDirection: z.object({
     reasoning: z.string().min(1).max(300),
@@ -117,8 +123,8 @@ ART DIRECTION RULES:
 - Match frameStyle to screenshot aspect (wide/desktop → window, tall/mobile → phone)
 - Use glass + cinematic-space for AI/futuristic products; solid-white for minimal keynote style
 - dropShadow: true for floating window panels; false only for flat minimal on white
-- Pick sceneTransition: blur-fade for premium SaaS (default), slide-left/up for mobile, smooth-fade for minimal
-- Never leave hard cuts — always pick a transition style
+- Pick logoIntroMotion + logoIntroBackdrop + sceneTransition as ONE Jitter-style motion language (see skill guide)
+- logoIntroBackdrop: white for light/minimal products, dark for dev tools & AI
 
 ${ART_DIRECTION_SKILL_GUIDE}
 

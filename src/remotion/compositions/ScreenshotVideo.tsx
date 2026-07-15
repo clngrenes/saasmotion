@@ -10,6 +10,10 @@ import { VideoAudio } from "../components/VideoAudio";
 import { INTRO_DURATION_FRAMES } from "../constants/media";
 import { getSceneSequenceDuration } from "../lib/slide-timing";
 import {
+  DEFAULT_LOGO_INTRO_BACKDROP,
+  DEFAULT_LOGO_INTRO_MOTION,
+} from "../motion-skills/ids";
+import {
   DEFAULT_SCENE_TRANSITION,
   DEFAULT_TRANSITION_DURATION_FRAMES,
   resolveSceneTransitionPresentation,
@@ -31,6 +35,8 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
   panelStyle,
   introMotion = "scale-in",
   sceneTransition = DEFAULT_SCENE_TRANSITION,
+  logoIntroMotion = DEFAULT_LOGO_INTRO_MOTION,
+  logoIntroBackdrop = DEFAULT_LOGO_INTRO_BACKDROP,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -74,7 +80,11 @@ export const ScreenshotVideo: React.FC<ScreenshotVideoProps> = ({
 
       {introDuration > 0 && (
         <Sequence from={0} durationInFrames={introDuration}>
-          <ProductIntro logoUrl={logoUrl} />
+          <ProductIntro
+            logoUrl={logoUrl}
+            logoIntroMotion={logoIntroMotion}
+            logoIntroBackdrop={logoIntroBackdrop}
+          />
         </Sequence>
       )}
 

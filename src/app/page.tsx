@@ -441,6 +441,8 @@ export default function PreviewPage() {
             style: artDirection.style,
             introMotion: artDirection.introMotion,
             sceneTransition: artDirection.sceneTransition,
+            logoIntroMotion: artDirection.logoIntroMotion,
+            logoIntroBackdrop: artDirection.logoIntroBackdrop,
           },
           audioDirection: {
             reasoning: audioDirection.reasoning,

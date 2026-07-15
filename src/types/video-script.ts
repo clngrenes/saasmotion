@@ -26,9 +26,28 @@ export type GeneratedArtDirection = {
   readonly sceneTransition:
     | "smooth-fade"
     | "blur-fade"
+    | "blur-slide-up"
+    | "blur-slide-left"
+    | "blur-scale"
     | "slide-left"
+    | "slide-right"
     | "slide-up"
-    | "wipe-soft";
+    | "slide-down"
+    | "wipe-soft"
+    | "wipe-left"
+    | "flip-soft";
+  readonly logoIntroMotion:
+    | "fade"
+    | "blur-fade"
+    | "blur-slide-up"
+    | "blur-slide-left"
+    | "blur-scale"
+    | "scale-grow"
+    | "slide-up"
+    | "slide-left"
+    | "mask-reveal-up"
+    | "mask-reveal-center";
+  readonly logoIntroBackdrop: "white" | "dark";
 };
 
 export type GeneratedAudioDirection = {

@@ -15,6 +15,7 @@ interface VideoAudioProps {
   readonly enableAudio: boolean;
   readonly audioDirection?: AudioDirection;
   readonly fps?: number;
+  readonly transitionDurationFrames?: number;
 }
 
 function resolveAudioSrc(src: string): string {
@@ -31,6 +32,7 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
   enableAudio,
   audioDirection,
   fps = 30,
+  transitionDurationFrames,
 }) => {
   if (!enableAudio) {
     return null;
@@ -51,6 +53,7 @@ export const VideoAudio: React.FC<VideoAudioProps> = ({
     playIntroRevealSfx: direction.playIntroRevealSfx,
     transitionSfx: direction.transitionSfx,
     fps,
+    transitionDurationFrames,
   });
 
   const sfxDuration = sfxDurationInFrames(direction.transitionSfx, fps);

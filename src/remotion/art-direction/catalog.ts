@@ -6,9 +6,17 @@ import {
   SCENE_TRANSITION_SKILL_GUIDE,
   type SceneTransitionId,
 } from "../transitions/ids";
+import {
+  DEFAULT_LOGO_INTRO_BACKDROP,
+  DEFAULT_LOGO_INTRO_MOTION,
+  LOGO_INTRO_SKILL_GUIDE,
+  MOTION_DIRECTOR_SKILL_GUIDE,
+  type LogoIntroBackdropId,
+  type LogoIntroMotionId,
+} from "../motion-skills/ids";
 
-export type { SceneTransitionId };
-export { SCENE_TRANSITION_SKILL_GUIDE };
+export type { SceneTransitionId, LogoIntroMotionId, LogoIntroBackdropId };
+export { SCENE_TRANSITION_SKILL_GUIDE, LOGO_INTRO_SKILL_GUIDE, MOTION_DIRECTOR_SKILL_GUIDE };
 
 /** Hintergrund-Stile, die die KI wählen kann */
 export const BACKGROUND_STYLE_IDS = [
@@ -84,6 +92,8 @@ export type ArtDirection = {
   };
   readonly introMotion: IntroMotionId;
   readonly sceneTransition: SceneTransitionId;
+  readonly logoIntroMotion: LogoIntroMotionId;
+  readonly logoIntroBackdrop: LogoIntroBackdropId;
 };
 
 export const DEFAULT_ART_DIRECTION: ArtDirection = {
@@ -106,6 +116,8 @@ export const DEFAULT_ART_DIRECTION: ArtDirection = {
   },
   introMotion: "scale-in",
   sceneTransition: DEFAULT_SCENE_TRANSITION,
+  logoIntroMotion: DEFAULT_LOGO_INTRO_MOTION,
+  logoIntroBackdrop: DEFAULT_LOGO_INTRO_BACKDROP,
 };
 
 export const CORNER_RADIUS_UNITS: Record<CornerRadiusId, number> = {
@@ -126,6 +138,8 @@ export const BACKGROUND_CSS: Record<BackgroundStyleId, string> = {
 /** Skill-Beschreibung für das KI-Prompt */
 export const ART_DIRECTION_SKILL_GUIDE = `
 You are also the motion art director. Pick the best visual skills for this product.
+
+${MOTION_DIRECTOR_SKILL_GUIDE}
 
 TRANSFORM (camera / motion):
 - zelios-style (Dolly): slow push-in, subtle Y swing — enterprise, calm, trustworthy
@@ -178,8 +192,9 @@ LENGTH (durationInFrames — pick based on screenshot count + story depth):
 - 2700 (90s): 5–6 screens, feature tour
 - 3600 (120s): 7+ screens or deep workflow story
 
-Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9.
-Mobile consumer → phone + slide + grow + 9:16. AI/futuristic → window + orbit + cinematic-space + glass.
+Choose ONE coherent direction. Enterprise B2B → window + orbit/dolly + dark-gradient + dropShadow + 16:9 + blur-fade throughout.
+Mobile consumer → phone + slide + grow + 9:16 + blur-scale logo + slide-up transitions.
+AI/futuristic → window + orbit + cinematic-space + glass + dark logo intro + blur-slide-up.
 
 ${SCENE_TRANSITION_SKILL_GUIDE}
 `;
